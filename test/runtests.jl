@@ -1,5 +1,5 @@
 using CutPruner
 using Base.Test
 
-# write your own tests here
-@test 1 == 2
+include("start.jl")
+include("oldnew.jl")

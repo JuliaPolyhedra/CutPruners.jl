@@ -1,5 +1,9 @@
 module CutPruner
 
-# package code goes here
+using DocStringExtensions
+
+include("abstract.jl")
+include("avg.jl")
+include("decay.jl")
 
 end # module
