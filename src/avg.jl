@@ -1,4 +1,4 @@
-export AvgCutPruner
+export AvgCutManager
 
 """
 $(TYPEDEF)
@@ -6,23 +6,32 @@ $(TYPEDEF)
 Removes the cuts with lower trust where the trust is: nused / nwith + bonus
 where the cut has been used `nused` times amoung `nwith` optimization done with it.
 We say that the cut was used if its dual value is nonzero.
-It has a bonus equal to `mycutbonus` if the cut was generated using a trial
-given by the problem using this cut.
+It has a bonus equal to `mycutbonus` if the cut was generated using a trial given by the problem using this cut.
 If `nwidth` is zero, `nused/nwith` is replaced by `newcuttrust`.
 """
-type AvgCutPruner{S} <: AbstractCutPruner{S}
+type AvgCutManager{S} <: AbstractCutManager{S}
     # used to generate cuts
+    # Cuts (A, b) defines the half-space satisfying: Ax >= b
+    # A
     cuts_DE::Nullable{AbstractMatrix{S}}
+    # b
     cuts_de::Nullable{AbstractVector{S}}
 
+    # number of optimality cuts
     nσ::Int
+    # number of feasibility cuts
     nρ::Int
+    # index of optimality cuts
     σs::Vector{Int}
+    # index of feasibility cuts
     ρs::Vector{Int}
 
+    # maximum number of cuts
     maxncuts::Int
 
+    # number of optimization performed
     nwith::Vector{Int}
+    # number of times where the cuts have been used
     nused::Vector{Int}
     mycut::Vector{Bool}
     trust::Nullable{Vector{Float64}}
@@ -32,18 +41,18 @@ type AvgCutPruner{S} <: AbstractCutPruner{S}
     newcuttrust::Float64
     mycutbonus::Float64
 
-    function AvgCutPruner(maxncuts::Int, newcuttrust=3/4, mycutbonus=1/4)
+    function AvgCutManager(maxncuts::Int, newcuttrust=3/4, mycutbonus=1/4)
         new(nothing, nothing, 0, 0, Int[], Int[], maxncuts, Int[], Int[], Bool[], nothing, Int[], 0, newcuttrust, mycutbonus)
     end
 end
 
-AvgCutPruner(maxncuts::Int, newcuttrust=3/4, mycutbonus=1/4) = AvgCutPruner{Float64}(maxncuts, newcuttrust, mycutbonus)
+AvgCutManager(maxncuts::Int, newcuttrust=3/4, mycutbonus=1/4) = AvgCutManager{Float64}(maxncuts, newcuttrust, mycutbonus)
 
-function clone{S}(man::AvgCutPruner{S})
-    AvgCutPruner{S}(man.maxncuts, man.newcuttrust, man.mycutbonus)
+function clone{S}(man::AvgCutManager{S})
+    AvgCutManager{S}(man.maxncuts, man.newcuttrust, man.mycutbonus)
 end
 
-function init!(man::AvgCutPruner, mycut_d, mycut_e)
+function init!(man::AvgCutManager, mycut_d, mycut_e)
     n = man.nσ+man.nρ
     man.nwith = zeros(Int, n)
     man.nused = zeros(Int, n)
@@ -53,7 +62,7 @@ function init!(man::AvgCutPruner, mycut_d, mycut_e)
 end
 
 # COMPARISON
-function updatestats!(man::AvgCutPruner, σρ)
+function updatestats!(man::AvgCutManager, σρ)
     if ncuts(man) > 0
         man.nwith += 1
         man.nused[σρ .> 1e-6] += 1
@@ -61,13 +70,13 @@ function updatestats!(man::AvgCutPruner, σρ)
     end
 end
 
-function gettrustof(man::AvgCutPruner, nwith, nused, mycut)
+function gettrustof(man::AvgCutManager, nwith, nused, mycut)
     (nwith == 0 ? man.newcuttrust : nused / nwith) + (mycut ? man.mycutbonus : 0)
 end
-function initialtrust(man::AvgCutPruner, mycut)
+function initialtrust(man::AvgCutManager, mycut)
     gettrustof(man, 0, 0, mycut)
 end
-function gettrust(man::AvgCutPruner)
+function gettrust(man::AvgCutManager)
     if isnull(man.trust)
         trust = man.nused ./ man.nwith
         trust[man.nwith .== 0] = man.newcuttrust
@@ -79,14 +88,14 @@ end
 
 # CHANGE
 
-function keeponly!(man::AvgCutPruner, K::Vector{Int})
+function keeponly!(man::AvgCutManager, K::Vector{Int})
     man.nwith = man.nwith[K]
     man.nused = man.nused[K]
     man.mycut = man.mycut[K]
     man.trust = gettrust(man)[K]
 end
 
-function replacecuts!(man::AvgCutPruner, js::AbstractVector{Int}, mycut::Vector{Bool})
+function replacecuts!(man::AvgCutManager, js::AbstractVector{Int}, mycut::Vector{Bool})
     man.nwith[js] = 0
     man.nused[js] = 0
     man.mycut[js] = mycut
@@ -94,7 +103,7 @@ function replacecuts!(man::AvgCutPruner, js::AbstractVector{Int}, mycut::Vector{
     man.ids[js] = newids(man, length(js))
 end
 
-function pushcuts!(man::AvgCutPruner, mycut::Vector{Bool})
+function pushcuts!(man::AvgCutManager, mycut::Vector{Bool})
     n = length(mycut)
     append!(man.nwith, zeros(n))
     append!(man.nused, zeros(n))
