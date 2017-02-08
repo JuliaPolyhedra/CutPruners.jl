@@ -1,3 +1,8 @@
+################################################################################
+# CutPruner
+# A package to manage polyhedral convex functions
+################################################################################
+
 module CutPruner
 
 using DocStringExtensions
