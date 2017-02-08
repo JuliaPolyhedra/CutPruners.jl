@@ -24,7 +24,13 @@ function start!{S}(man::AbstractCutPruner{S}, ncols::Integer)
     start!(man, Matrix{S}(0, ncols), Matrix{S}(0, ncols), S[], S[], Bool[], Bool[])
 end
 
-function start!{S}(man::AbstractCutPruner{S}, cuts_D::AbstractMatrix{S}, cuts_E::AbstractMatrix{S}, cuts_d::AbstractVector{S}, cuts_e::AbstractVector{S}, mycut_d::AbstractVector{Bool}, mycut_e::AbstractVector{Bool})
+function start!{S}(man::AbstractCutPruner{S},
+                   cuts_D::AbstractMatrix{S},
+                   cuts_E::AbstractMatrix{S},
+                   cuts_d::AbstractVector{S},
+                   cuts_e::AbstractVector{S},
+                   mycut_d::AbstractVector{Bool},
+                   mycut_e::AbstractVector{Bool})
     man.nσ = length(cuts_d)
     man.nρ = length(cuts_e)
     man.cuts_DE = [cuts_D; cuts_E]
@@ -79,7 +85,11 @@ isbetter(man::AbstractCutPruner, i::Int, mycut::Bool) = gettrust(man)[i] > initi
 # Add cut ax >= β
 # If fc then it is a feasibility cut, otherwise it is an optimality cut
 # If mycut then the cut has been added because of one of my trials
-function addcuts!{S}(man::AbstractCutPruner{S}, A::AbstractMatrix{S}, b::AbstractVector{S}, isfc::Bool, mycut::Vector{Bool})
+function addcuts!{S}(man::AbstractCutPruner{S},
+                     A::AbstractMatrix{S},
+                     b::AbstractVector{S},
+                     isfc::Bool,
+                     mycut::Vector{Bool})
     nnew = size(A, 1)
     @assert length(mycut) == length(b) == nnew
     @assert nnew > 0
