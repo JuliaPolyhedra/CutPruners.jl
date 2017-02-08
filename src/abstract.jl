@@ -18,7 +18,7 @@ function isfeasibilitycut(man::AbstractCutPruner, cut)
     end
 end
 
-function init!(man::AbstractCutPruner, mycut_d, mycut_e)
+function init!(man::AbstractCutPruner, mycut_d::Vector{Bool}, mycut_e::Vector{Bool})
     mycut = [mycut_d; mycut_e]
     man.trust = Float64[initialtrust(man, mc) for mc in mycut]
     man.ids = newids(man, length(mycut))
@@ -65,7 +65,8 @@ function _indmin(a::Vector, tiebreaker::Vector)
     imin
 end
 
-function choosecutstoremove(man::AbstractCutPruner, num)
+"""Remove `num` cuts in CutPruner `man`."""
+function choosecutstoremove(man::AbstractCutPruner, num::Int)
     # MergeSort is stable so in case of equality, the oldest cut loose
     # However PartialQuickSort is a lot faster
 
@@ -88,6 +89,7 @@ function choosecutstoremove(man::AbstractCutPruner, num)
     end
 end
 
+"""Test if cut `i` is better than `newcuttrust`."""
 isbetter(man::AbstractCutPruner, i::Int, mycut::Bool) = gettrust(man)[i] > initialtrust(man, mycut)
 
 # CHANGE
@@ -239,10 +241,12 @@ function keeponly!(man::AbstractCutPruner, K::Vector{Int})
     man.trust = man.trust[K]
 end
 
+"""Get a Vector of Float64 specifying the initial trusts of `mycut`."""
 function initialtrusts(man::AbstractCutPruner, mycut::Vector{Bool})
     Float64[initialtrust(man, mc) for mc in mycut]
 end
 
+"""Reset trust of cuts with indexes in `js`."""
 function replacecuts!(man::AbstractCutPruner, js::AbstractVector{Int}, mycut::Vector{Bool})
     man.trust[js] = initialtrusts(man, mycut)
     man.ids[js] = newids(man, length(js))
