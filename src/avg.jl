@@ -54,7 +54,7 @@ function clone{S}(man::AvgCutPruner{S})
 end
 
 """Init CutPruner `man`."""
-function init!(man::AvgCutPruner, mycut_d, mycut_e)
+function init!(man::AvgCutPruner, mycut_d::Vector{Bool}, mycut_e::Vector{Bool})
     n = man.nσ+man.nρ
     man.nwith = zeros(Int, n)
     man.nused = zeros(Int, n)
