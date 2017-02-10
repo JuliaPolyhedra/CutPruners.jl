@@ -1,4 +1,4 @@
-export DecayCutPruner
+export DecayCutPruningAlgo, DecayCutPruner
 
 """
 $(TYPEDEF)
@@ -11,10 +11,20 @@ It has a bonus equal to `mycutbonus` if the cut was generated using a trial
 given by the problem using this cut.
 We say that the cut was used if its dual value is nonzero.
 """
-type DecayCutPruner{S} <: AbstractCutPruner{S}
+type DecayCutPruningAlgo <: AbstractCutPruningAlgo
+    maxncuts::Int
+    λ::Float64
+    newcuttrust::Float64
+    mycutbonus::Float64
+    function DecayCutPruningAlgo(maxncuts::Int, λ=0.9, newcuttrust=0.8, mycutbonus=1)#newcuttrust=(1/(1/0.9-1))/2, mycutbonus=(1/(1/0.9-1))/2)
+        new(maxncuts, λ, newcuttrust, mycutbonus)
+    end
+end
+
+type DecayCutPruner{N, T} <: AbstractCutPruner{N, T}
     # used to generate cuts
-    cuts_DE::Nullable{AbstractMatrix{S}}
-    cuts_de::Nullable{AbstractVector{S}}
+    cuts_DE::AbstractMatrix{T}
+    cuts_de::AbstractVector{T}
 
     nσ::Int
     nρ::Int
@@ -32,15 +42,11 @@ type DecayCutPruner{S} <: AbstractCutPruner{S}
     mycutbonus::Float64
 
     function DecayCutPruner(maxncuts::Int, λ=0.9, newcuttrust=0.8, mycutbonus=1)#newcuttrust=(1/(1/0.9-1))/2, mycutbonus=(1/(1/0.9-1))/2)
-        new(nothing, nothing, 0, 0, Int[], Int[], maxncuts, Float64[], Int[], 0, λ, newcuttrust, mycutbonus)
+        new(spzeros(T, 0, N), T[], 0, 0, Int[], Int[], maxncuts, Float64[], Int[], 0, λ, newcuttrust, mycutbonus)
     end
 end
 
-DecayCutPruner(maxncuts::Int, λ=0.9, newcuttrust=(1/(1/0.9-1))/2, mycutbonus=(1/(1/0.9-1))/2) = DecayCutPruner{Float64}(maxncuts, λ, newcuttrust, mycutbonus)
-
-function clone{S}(man::DecayCutPruner{S})
-    DecayCutPruner{S}(man.maxncuts, man.λ, man.newcuttrust, man.mycutbonus)
-end
+(::Type{CutPruner{N, T}}){N, T}(algo::DecayCutPruningAlgo) = DecayCutPruner{N, T}(algo.maxncuts, algo.λ, algo.newcuttrust, algo.mycutbonus)
 
 # COMPARISON
 function updatestats!(man::DecayCutPruner, σρ)

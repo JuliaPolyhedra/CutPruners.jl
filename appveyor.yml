@@ -28,7 +28,7 @@ build_script:
 # Need to convert from shallow to complete for Pkg.clone to work
   - IF EXIST .git\shallow (git fetch --unshallow)
   - C:\projects\julia\bin\julia -e "versioninfo();
-      Pkg.clone(pwd(), \"CutPruner\"); Pkg.build(\"CutPruner\")"
+      Pkg.clone(pwd(), \"CutPruners\"); Pkg.build(\"CutPruners\")"
 
 test_script:
-  - C:\projects\julia\bin\julia -e "Pkg.test(\"CutPruner\")"
+  - C:\projects\julia\bin\julia -e "Pkg.test(\"CutPruners\")"

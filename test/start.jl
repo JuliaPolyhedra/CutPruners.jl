@@ -1,8 +1,6 @@
 @testset "Initialization" begin
-    for pruner in [AvgCutPruner{Int}(1), DecayCutPruner{Int}(1)]
-        @test !isstarted(pruner)
-        start!(pruner, 0)
+    for algo in [AvgCutPruningAlgo(1), DecayCutPruningAlgo(1)]
+        pruner = CutPruner{2, Int}(algo)
         @test ncuts(pruner) == 0
-        @test isstarted(pruner)
     end
 end

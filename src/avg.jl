@@ -1,4 +1,4 @@
-export AvgCutPruner
+export AvgCutPruningAlgo, AvgCutPruner
 
 """
 $(TYPEDEF)
@@ -9,13 +9,23 @@ We say that the cut was used if its dual value is nonzero.
 It has a bonus equal to `mycutbonus` if the cut was generated using a trial given by the problem using this cut.
 If `nwidth` is zero, `nused/nwith` is replaced by `newcuttrust`.
 """
-type AvgCutPruner{S} <: AbstractCutPruner{S}
+type AvgCutPruningAlgo <: AbstractCutPruningAlgo
+    # maximum number of cuts
+    maxncuts::Int
+    newcuttrust::Float64
+    mycutbonus::Float64
+    function AvgCutPruningAlgo(maxncuts::Int, newcuttrust=3/4, mycutbonus=1/4)
+        new(maxncuts, newcuttrust, mycutbonus)
+    end
+end
+
+type AvgCutPruner{N, T} <: AbstractCutPruner{N, T}
     # used to generate cuts
     # Cuts (A, b) defines the half-space satisfying: Ax >= b
     # A
-    cuts_DE::Nullable{AbstractMatrix{S}}
+    cuts_DE::AbstractMatrix{T}
     # b
-    cuts_de::Nullable{AbstractVector{S}}
+    cuts_de::AbstractVector{T}
 
     # number of optimality cuts
     nσ::Int
@@ -42,26 +52,11 @@ type AvgCutPruner{S} <: AbstractCutPruner{S}
     mycutbonus::Float64
 
     function AvgCutPruner(maxncuts::Int, newcuttrust=3/4, mycutbonus=1/4)
-        new(nothing, nothing, 0, 0, Int[], Int[], maxncuts, Int[], Int[], Bool[], nothing, Int[], 0, newcuttrust, mycutbonus)
+        new(spzeros(T, 0, N), T[], 0, 0, Int[], Int[], maxncuts, Int[], Int[], Bool[], nothing, Int[], 0, newcuttrust, mycutbonus)
     end
 end
 
-AvgCutPruner(maxncuts::Int, newcuttrust=3/4, mycutbonus=1/4) = AvgCutPruner{Float64}(maxncuts, newcuttrust, mycutbonus)
-
-"""Copy CutPruner `man`."""
-function clone{S}(man::AvgCutPruner{S})
-    AvgCutPruner{S}(man.maxncuts, man.newcuttrust, man.mycutbonus)
-end
-
-"""Init CutPruner `man`."""
-function init!(man::AvgCutPruner, mycut_d::Vector{Bool}, mycut_e::Vector{Bool})
-    n = man.nσ+man.nρ
-    man.nwith = zeros(Int, n)
-    man.nused = zeros(Int, n)
-    man.mycut = [mycut_d; mycut_e]
-    man.trust = nothing
-    man.ids = newids(man, n)
-end
+(::Type{CutPruner{N, T}}){N, T}(algo::AvgCutPruningAlgo) = AvgCutPruner{N, T}(algo.maxncuts, algo.newcuttrust, algo.mycutbonus)
 
 # COMPARISON
 """Update cuts relevantness after a solver's call returning dual vector `σ\rho`."""

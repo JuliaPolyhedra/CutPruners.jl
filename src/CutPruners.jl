@@ -1,11 +1,11 @@
 ################################################################################
-# CutPruner
+# CutPruners
 # A package to manage polyhedral convex functions
 ################################################################################
 
 __precompile__()
 
-module CutPruner
+module CutPruners
 
 using DocStringExtensions
 

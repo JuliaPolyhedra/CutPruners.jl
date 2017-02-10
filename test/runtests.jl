@@ -1,4 +1,4 @@
-using CutPruner
+using CutPruners
 using Base.Test
 
 include("start.jl")

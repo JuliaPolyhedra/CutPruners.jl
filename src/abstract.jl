@@ -1,13 +1,18 @@
 ################################################################################
 # Implement abstract type of CutPruner
 ################################################################################
-export AbstractCutPruner, addcuts!, start!, isstarted, ncuts
+export AbstractCutPruningAlgo
+export CutPruner, AbstractCutPruner, addcuts!, ncuts
 
-abstract AbstractCutPruner{S}
+abstract AbstractCutPruningAlgo
+
+abstract AbstractCutPruner{N, T}
+
+immutable CutPruner{N, T} end
 
 """Return number of cuts in CutPruner `man`."""
 function ncuts(man::AbstractCutPruner)
-    return length(get(man.cuts_de))
+    return length(man.cuts_de)
 end
 
 function isfeasibilitycut(man::AbstractCutPruner, cut)
@@ -22,33 +27,6 @@ function init!(man::AbstractCutPruner, mycut_d::Vector{Bool}, mycut_e::Vector{Bo
     mycut = [mycut_d; mycut_e]
     man.trust = Float64[initialtrust(man, mc) for mc in mycut]
     man.ids = newids(man, length(mycut))
-end
-
-function start!{S}(man::AbstractCutPruner{S}, ncols::Integer)
-    start!(man, Matrix{S}(0, ncols), Matrix{S}(0, ncols), S[], S[], Bool[], Bool[])
-end
-
-"""Start CutPruner `man`."""
-function start!{S}(man::AbstractCutPruner{S},
-                   cuts_D::AbstractMatrix{S},
-                   cuts_E::AbstractMatrix{S},
-                   cuts_d::AbstractVector{S},
-                   cuts_e::AbstractVector{S},
-                   mycut_d::AbstractVector{Bool},
-                   mycut_e::AbstractVector{Bool})
-    man.nσ = length(cuts_d)
-    man.nρ = length(cuts_e)
-    man.cuts_DE = [cuts_D; cuts_E]
-    man.cuts_de = [cuts_d; cuts_e]
-    man.σs = collect(1:man.nσ)
-    man.ρs = collect(man.nσ+(1:man.nρ))
-    init!(man, mycut_d, mycut_e)
-end
-
-"""State if CutPruner `man` was initialized."""
-function isstarted(man::AbstractCutPruner)
-    @assert isnull(man.cuts_DE) == isnull(man.cuts_de)
-    !isnull(man.cuts_DE)
 end
 
 # COMPARISON
@@ -98,9 +76,9 @@ isbetter(man::AbstractCutPruner, i::Int, mycut::Bool) = gettrust(man)[i] > initi
 # FIXME: Ax >= b ?
 # If fc then it is a feasibility cut, otherwise it is an optimality cut
 # If mycut then the cut has been added because of one of my trials
-function addcuts!{S}(man::AbstractCutPruner{S},
-                     A::AbstractMatrix{S},
-                     b::AbstractVector{S},
+function addcuts!{N, T}(man::AbstractCutPruner{N, T},
+                     A::AbstractMatrix{T},
+                     b::AbstractVector{T},
                      isfc::Bool,
                      mycut::Vector{Bool})
     # get number of new cuts in A:
@@ -187,8 +165,8 @@ function addcuts!{S}(man::AbstractCutPruner{S},
                 @assert length(br) < length(J)
                 js = J[(length(J) - length(br) + 1):end]
             end
-            get(man.cuts_DE)[js,:] = Ar
-            get(man.cuts_de)[js] = br
+            man.cuts_DE[js,:] = Ar
+            man.cuts_de[js] = br
             replacecuts!(man, js, mycutr)
             cutadded = true
             needupdate_σsρs = reduce(|, false, Bool[isfc $ isfeasibilitycut(man, j) for j in js])
@@ -215,8 +193,8 @@ function addcuts!{S}(man::AbstractCutPruner{S},
 
         if !isempty(J)
             # TODO: dry these two lines in keeponly to avoid side effect?
-            man.cuts_DE = get(man.cuts_DE)[K,:]
-            man.cuts_de = get(man.cuts_de)[K]
+            man.cuts_DE = man.cuts_DE[K,:]
+            man.cuts_de = man.cuts_de[K]
             keeponly!(man, K)
         end
     elseif !isempty(b)
@@ -228,8 +206,8 @@ function addcuts!{S}(man::AbstractCutPruner{S},
             append!(man.ρs, man.nσ + man.nρ + (1:nnew))
             man.nρ += nnew
         end
-        man.cuts_DE = [get(man.cuts_DE); A]
-        man.cuts_de = [get(man.cuts_de); b]
+        man.cuts_DE = [man.cuts_DE; A]
+        man.cuts_de = [man.cuts_de; b]
         pushcuts!(man, mycut)
     end
 
