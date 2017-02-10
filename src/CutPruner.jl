@@ -3,6 +3,8 @@
 # A package to manage polyhedral convex functions
 ################################################################################
 
+__precompile__()
+
 module CutPruner
 
 using DocStringExtensions
