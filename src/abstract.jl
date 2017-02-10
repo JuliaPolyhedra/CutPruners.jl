@@ -1,7 +1,7 @@
 ################################################################################
 # Implement abstract type of CutPruner
 ################################################################################
-export AbstractCutPruner, addcuts!, start!, isstarted
+export AbstractCutPruner, addcuts!, start!, isstarted, ncuts
 
 abstract AbstractCutPruner{S}
 
