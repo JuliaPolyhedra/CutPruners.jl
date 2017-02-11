@@ -24,11 +24,6 @@ type LevelOneCutPruner{N, T} <: AbstractCutPruner{N, T}
     cuts_DE::AbstractMatrix{T}
     cuts_de::AbstractVector{T}
 
-    nσ::Int
-    nρ::Int
-    σs::Vector{Int}
-    ρs::Vector{Int}
-
     maxncuts::Int
 
     trust::Nullable{Vector{Float64}}
@@ -41,7 +36,7 @@ type LevelOneCutPruner{N, T} <: AbstractCutPruner{N, T}
     states::Array{T, 2}
 
     function LevelOneCutPruner(maxncuts::Int)
-        new(spzeros(T, 0, N), T[], 0, 0, Int[], Int[], maxncuts, nothing, Int[], 0, [], 0, zeros(T, 0, N))
+        new(spzeros(T, 0, N), T[], maxncuts, nothing, Int[], 0, [], 0, zeros(T, 0, N))
     end
 end
 
@@ -206,12 +201,12 @@ function gettrust(man::LevelOneCutPruner)
 end
 
 
-function keeponly!(man::LevelOneCutPruner, K::Vector{Int})
+function keeponly!(man::LevelOneCutPruner, K::AbstractVector{Int})
     man.trust = gettrust(man)[K]
 end
 
 
-function replacecuts!(man::LevelOneCutPruner, js::AbstractVector{Int}, mycut::Vector{Bool})
+function replacecuts!(man::LevelOneCutPruner, js::AbstractVector{Int}, mycut::AbstractVector{Bool})
     gettrust(man)[js] = initialtrusts(man, mycut)
     man.territories = man.territories[js]
     man.ids[js] = newids(man, length(js))
@@ -219,7 +214,7 @@ end
 
 
 """Push new cut in CutPruner `man`."""
-function pushcuts!(man::LevelOneCutPruner, mycut::Vector{Bool})
+function pushcuts!(man::LevelOneCutPruner, mycut::AbstractVector{Bool})
     n = length(mycut)
     if !isnull(man.trust)
         append!(get(man.trust), initialtrusts(man, mycut))
