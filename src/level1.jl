@@ -1,4 +1,4 @@
-export LevelOneCutPruner
+export LevelOneCutPruner, LevelOnePruningAlgo
 
 
 type LevelOnePruningAlgo <: AbstractCutPruningAlgo
@@ -35,16 +35,18 @@ type LevelOneCutPruner{N, T} <: AbstractCutPruner{N, T}
     ids::Vector{Int} # small id means old
     id::Int # current id
 
-    territories::Array{AbstractArray{T}} #set of states where cut k is active
+    #set of states where cut k is active
+    territories::Vector{Vector{Tuple{Int64, T}}}
     nstates::Int
     states::Array{T, 2}
 
     function LevelOneCutPruner(maxncuts::Int)
-        new(spzeros(T, 0, N), T[], 0, 0, Int[], Int[], maxncuts, Int[], Int[], Bool[])
+        new(spzeros(T, 0, N), T[], 0, 0, Int[], Int[], maxncuts, nothing, Int[], 0, [], 0, zeros(T, 0, N))
     end
 end
 
 (::Type{CutPruner{N, T}}){N, T}(algo::LevelOnePruningAlgo) = LevelOneCutPruner{N, T}(algo.maxncuts)
+
 
 """Update territories with cuts previously computed during backward pass.
 
@@ -52,23 +54,28 @@ $(SIGNATURES)
 
 # Arguments
 * `man::LevelOneCutPruner`
+* `position::Array{T, 2}`
+    New visited positions
 """
-function update!(man::LevelOneCutPruner, states)
+function updatestats!{T}(man::LevelOneCutPruner, position::Array{T, 2})
     nc = ncuts(man)
     # get number of new positions to analyse:
-    nx = size(states, 1)
-    nt = nc - cutscontainer.numCuts
+    nx = size(position, 1)
+    # get number of cuts added since last update:
+    nt = nc - length(man.territories)
 
+    man.territories = vcat(man.territories, [Tuple{Int64, T}[] for _ in 1:nt])
     for i in 1:nt
-        push!(man.territories, [])
-        addcuts!(man)
+        # update territory for new cut with index i
         updateterritory!(man, nc - nt + i)
     end
 
     for i in 1:nx
-        x = states[i, :]
-        addstate!(man, x)
+        addstate!(man, position[i, :])
     end
+
+    # need to be recomputed
+    man.trust = nothing
 end
 
 
@@ -77,12 +84,13 @@ end
 $(SIGNATURES)
 
 """
-function addstate!(man::LevelOneCutPruner, x::Vector{Float64})
+function addstate!(man::LevelOneCutPruner, x::Vector)
     # Get cut which is active at point `x`:
     bcost, bcuts = optimalcut(man, x)
 
-    # Add `x` to the territory of cut `bcuts`:
+    # update number of states
     man.nstates += 1
+    # Add `x` with index nstates  to the territory of cut with index `bcuts`:
     push!(man.territories[bcuts], (man.nstates, bcost))
 
     # Add `x` to the list of visited state:
@@ -105,8 +113,8 @@ $(SIGNATURES)
 `bestcut::Int64`
     Index of supporting cut at point `xf`
 """
-function optimalcut(man::LevelOneCutPruner,
-                    xf::Vector{Float64})
+function optimalcut{T}(man::LevelOneCutPruner,
+                       xf::Vector{T})
     bestcost = -Inf::Float64
     bestcut = -1
     dimstates = length(xf)
@@ -180,4 +188,48 @@ function cutvalue(man::LevelOneCutPruner, indc::Int, x::Vector{Float64})
         cost += man.cuts_DE[indc, j]*x[j]
     end
     cost
+end
+
+
+function gettrustof(man::LevelOneCutPruner, nwith, nused, mycut)
+    (nwith == 0 ? man.newcuttrust : nused / nwith) + (mycut ? man.mycutbonus : 0)
+end
+
+initialtrust(man::LevelOneCutPruner, mycut) = 0
+
+function gettrust(man::LevelOneCutPruner)
+    if isnull(man.trust) || ~checkconsistency(man)
+        trust = Float64[length(terr) for terr in man.territories]
+        man.trust = trust
+    end
+    get(man.trust)
+end
+
+
+function keeponly!(man::LevelOneCutPruner, K::Vector{Int})
+    man.trust = gettrust(man)[K]
+end
+
+
+function replacecuts!(man::LevelOneCutPruner, js::AbstractVector{Int}, mycut::Vector{Bool})
+    gettrust(man)[js] = initialtrusts(man, mycut)
+    man.territories = man.territories[js]
+    man.ids[js] = newids(man, length(js))
+end
+
+
+"""Push new cut in CutPruner `man`."""
+function pushcuts!(man::LevelOneCutPruner, mycut::Vector{Bool})
+    n = length(mycut)
+    if !isnull(man.trust)
+        append!(get(man.trust), initialtrusts(man, mycut))
+    end
+    append!(man.ids, newids(man, n))
+end
+
+
+"""Check consistency of CutPruner `man`."""
+function checkconsistency(man::LevelOneCutPruner)
+    consistency = (ncuts(man) == length(man.territories))
+    consistency
 end
