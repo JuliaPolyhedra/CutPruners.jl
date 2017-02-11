@@ -88,14 +88,14 @@ end
 # CHANGE
 
 #FIXME: do not drop cuts in cuts_DE and cuts_de?
-function keeponly!(man::AvgCutPruner, K::Vector{Int})
+function keeponly!(man::AvgCutPruner, K::AbstractVector{Int})
     man.nwith = man.nwith[K]
     man.nused = man.nused[K]
     man.mycut = man.mycut[K]
     man.trust = gettrust(man)[K]
 end
 
-function replacecuts!(man::AvgCutPruner, js::AbstractVector{Int}, mycut::Vector{Bool})
+function replacecuts!(man::AvgCutPruner, js::AbstractVector{Int}, mycut::AbstractVector{Bool})
     man.nwith[js] = 0
     man.nused[js] = 0
     man.mycut[js] = mycut
@@ -104,7 +104,7 @@ function replacecuts!(man::AvgCutPruner, js::AbstractVector{Int}, mycut::Vector{
 end
 
 """Push new cut in CutPruner `man`."""
-function pushcuts!(man::AvgCutPruner, mycut::Vector{Bool})
+function pushcuts!(man::AvgCutPruner, mycut::AbstractVector{Bool})
     n = length(mycut)
     append!(man.nwith, zeros(n))
     append!(man.nused, zeros(n))
