@@ -1,6 +1,15 @@
 export LevelOneCutPruner
 
 
+type LevelOnePruningAlgo <: AbstractCutPruningAlgo
+    # maximum number of cuts
+    maxncuts::Int
+    function LevelOnePruningAlgo(maxncuts::Int)
+        new(maxncuts)
+    end
+end
+
+
 """
 $(TYPEDEF)
 
@@ -10,10 +19,10 @@ We say that the cut was used if its dual value is nonzero.
 It has a bonus equal to `mycutbonus` if the cut was generated using a trial given by the problem using this cut.
 If `nwidth` is zero, `nused/nwith` is replaced by `newcuttrust`.
 """
-type LevelOneCutPruner{S} <: AbstractCutPruner{S}
+type LevelOneCutPruner{N, T} <: AbstractCutPruner{N, T}
     # used to generate cuts
-    cuts_DE::Nullable{AbstractMatrix{S}}
-    cuts_de::Nullable{AbstractVector{S}}
+    cuts_DE::AbstractMatrix{T}
+    cuts_de::AbstractVector{T}
 
     nσ::Int
     nρ::Int
@@ -26,15 +35,16 @@ type LevelOneCutPruner{S} <: AbstractCutPruner{S}
     ids::Vector{Int} # small id means old
     id::Int # current id
 
-    territories::Array{AbstractArray{S}} #set of states where cut k is active
+    territories::Array{AbstractArray{T}} #set of states where cut k is active
     nstates::Int
-    states::Array{S, 2}
+    states::Array{T, 2}
 
     function LevelOneCutPruner(maxncuts::Int)
-        new(nothing, nothing, 0, 0, Int[], Int[], maxncuts, Int[], Int[], Bool[])
+        new(spzeros(T, 0, N), T[], 0, 0, Int[], Int[], maxncuts, Int[], Int[], Bool[])
     end
 end
 
+(::Type{CutPruner{N, T}}){N, T}(algo::LevelOnePruningAlgo) = LevelOneCutPruner{N, T}(algo.maxncuts)
 
 """Update territories with cuts previously computed during backward pass.
 
