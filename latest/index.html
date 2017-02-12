@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Modular interface and implementation of cut pruning algorithms">
+  <meta name="author" content="Benoît Legat and François Pacaud">
+  <link rel="shortcut icon" href="./img/favicon.ico">
+  <title>Home - CutPruners.jl</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="./css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="./css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="./css/highlight.css">
+  <link href="./assets/Documenter.css" rel="stylesheet">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Home";
+    var mkdocs_page_input_path = "index.md";
+    var mkdocs_page_url = "/";
+  </script>
+  
+  <script src="./js/jquery-2.1.1.min.js"></script>
+  <script src="./js/modernizr-2.8.3.min.js"></script>
+  <script type="text/javascript" src="./js/highlight.pack.js"></script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href="." class="icon icon-home"> CutPruners.jl</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+          
+            <li>
+    <li class="toctree-l1 current">
+        <a class="current" href=".">Home</a>
+        
+            <ul>
+            
+                <li class="toctree-l3"><a href="#cutprunersjl-documentation">CutPruners.jl Documentation</a></li>
+                
+                    <li><a class="toctree-l4" href="#functions">Functions</a></li>
+                
+                    <li><a class="toctree-l4" href="#index">Index</a></li>
+                
+            
+            </ul>
+        
+    </li>
+<li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href=".">CutPruners.jl</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Home</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        <a href="https://github.com/JuliaPolyhedra/CutPruners.jl/edit/master/docs/index.md"
+          class="icon icon-github"> Edit on GitHub</a>
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <p><a id='CutPruners.jl-Documentation-1'></a></p>
+<h1 id="cutprunersjl-documentation">CutPruners.jl Documentation</h1>
+<p><a id='Functions-1'></a></p>
+<h2 id="functions">Functions</h2>
+<p><a id='CutPruners.DecayCutPruningAlgo' href='#CutPruners.DecayCutPruningAlgo'>#</a>
+<strong><code>CutPruners.DecayCutPruningAlgo</code></strong> &mdash; <em>Type</em>.</p>
+<pre><code class="julia">type DecayCutPruningAlgo &lt;: CutPruners.AbstractCutPruningAlgo
+</code></pre>
+
+<p>Removes the cuts with lower trust where the trust is initially <code>newcuttrust + bonus</code> and is updated using <code>trust -&gt; λ * trust + used</code> after each optimization done with it. The value <code>used</code> is 1 if the cut was used and 0 otherwise. It has a bonus equal to <code>mycutbonus</code> if the cut was generated using a trial given by the problem using this cut. We say that the cut was used if its dual value is nonzero.</p>
+<p><a target='_blank' href='https://github.com/JuliaPolyhedra/CutPruners.jl/tree/c75a04a4dfbbb45a2815091e5235363f43650377/src/decay.jl#L3' class='documenter-source'>source</a><br></p>
+<p><a id='CutPruners.AvgCutPruningAlgo' href='#CutPruners.AvgCutPruningAlgo'>#</a>
+<strong><code>CutPruners.AvgCutPruningAlgo</code></strong> &mdash; <em>Type</em>.</p>
+<pre><code class="julia">type AvgCutPruningAlgo &lt;: CutPruners.AbstractCutPruningAlgo
+</code></pre>
+
+<p>Removes the cuts with lower trust where the trust is: nused / nwith + bonus where the cut has been used <code>nused</code> times amoung <code>nwith</code> optimization done with it. We say that the cut was used if its dual value is nonzero. It has a bonus equal to <code>mycutbonus</code> if the cut was generated using a trial given by the problem using this cut. If <code>nwidth</code> is zero, <code>nused/nwith</code> is replaced by <code>newcuttrust</code>.</p>
+<p><a target='_blank' href='https://github.com/JuliaPolyhedra/CutPruners.jl/tree/c75a04a4dfbbb45a2815091e5235363f43650377/src/avg.jl#L3' class='documenter-source'>source</a><br></p>
+<p><a id='Index-1'></a></p>
+<h2 id="index">Index</h2>
+<ul>
+<li><a href=".#CutPruners.AvgCutPruningAlgo"><code>CutPruners.AvgCutPruningAlgo</code></a></li>
+<li><a href=".#CutPruners.DecayCutPruningAlgo"><code>CutPruners.DecayCutPruningAlgo</code></a></li>
+</ul>
+              
+            </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+	  
+        </div>
+      </div>
+
+    </section>
+    
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a href="https://github.com/JuliaPolyhedra/CutPruners.jl" class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
+      
+      
+      
+    </span>
+</div>
+    <script src="./js/theme.js"></script>
+      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script src="./assets/mathjaxhelper.js"></script>
+
+</body>
+</html>
+
+<!--
+MkDocs version : 0.16.1
+Build Date UTC : 2017-02-12 10:33:52
+-->
