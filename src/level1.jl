@@ -116,7 +116,7 @@ function optimalcut{T}(man::LevelOneCutPruner,
     nc = ncuts(man)
 
     @inbounds for i in 1:nc
-        cost = man.cuts_de[i]
+        cost = -man.cuts_de[i]
         for j in 1:dimstates
             cost += man.cuts_DE[i, j]*xf[j]
         end
@@ -178,7 +178,7 @@ $(SIGNATURES)
     Value of cut `indc` at point `x`
 """
 function cutvalue(man::LevelOneCutPruner, indc::Int, x::Vector{Float64})
-    cost = man.cuts_de[indc]
+    cost = -man.cuts_de[indc]
     for j in 1:length(x)
         cost += man.cuts_DE[indc, j]*x[j]
     end
