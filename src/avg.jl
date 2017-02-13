@@ -51,8 +51,11 @@ type AvgCutPruner{N, T} <: AbstractCutPruner{N, T}
     newcuttrust::Float64
     mycutbonus::Float64
 
-    function AvgCutPruner(maxncuts::Int, newcuttrust=3/4, mycutbonus=1/4)
-        new(spzeros(T, 0, N), T[], 0, 0, Int[], Int[], maxncuts, Int[], Int[], Bool[], nothing, Int[], 0, newcuttrust, mycutbonus)
+    # tolerance to check redundancy between two cuts
+    TOL_EPS::Float64
+
+    function AvgCutPruner(maxncuts::Int, newcuttrust=3/4, mycutbonus=1/4; tol=1e-6)
+        new(spzeros(T, 0, N), T[], 0, 0, Int[], Int[], maxncuts, Int[], Int[], Bool[], nothing, Int[], 0, newcuttrust, mycutbonus, tol)
     end
 end
 

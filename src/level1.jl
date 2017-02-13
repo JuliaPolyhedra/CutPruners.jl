@@ -35,8 +35,11 @@ type LevelOneCutPruner{N, T} <: AbstractCutPruner{N, T}
     nstates::Int
     states::Array{T, 2}
 
-    function LevelOneCutPruner(maxncuts::Int)
-        new(spzeros(T, 0, N), T[], maxncuts, nothing, Int[], 0, [], 0, zeros(T, 0, N))
+    # tolerance to check redundancy between two cuts
+    TOL_EPS::Float64
+
+    function LevelOneCutPruner(maxncuts::Int, tol=1e-6)
+        new(spzeros(T, 0, N), T[], maxncuts, nothing, Int[], 0, [], 0, zeros(T, 0, N), tol)
     end
 end
 
