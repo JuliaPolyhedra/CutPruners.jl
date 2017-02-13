@@ -93,6 +93,19 @@ function gettrust(man::ExactCutPruner)
     get(man.trust)
 end
 
+# recompute trust only in positition specified in `pos`
+# Use this function to not re-test all cuts but only a smaller subset
+function gettrust(man::ExactCutPruner, pos::Vector{Int})
+    if isnull(man.trust)
+        trust = ones(Bool, ncuts(man))
+        for pp in pos
+            trust[pp] = isdominant(man, pp)
+        end
+        man.trust = trust
+    end
+    get(man.trust)
+end
+
 
 function keeponly!(man::ExactCutPruner, K::AbstractVector{Int})
     man.trust = gettrust(man)[K]
