@@ -41,8 +41,11 @@ type DecayCutPruner{N, T} <: AbstractCutPruner{N, T}
     newcuttrust::Float64
     mycutbonus::Float64
 
-    function DecayCutPruner(maxncuts::Int, λ=0.9, newcuttrust=0.8, mycutbonus=1)#newcuttrust=(1/(1/0.9-1))/2, mycutbonus=(1/(1/0.9-1))/2)
-        new(spzeros(T, 0, N), T[], 0, 0, Int[], Int[], maxncuts, Float64[], Int[], 0, λ, newcuttrust, mycutbonus)
+    # tolerance to check redundancy between two cuts
+    TOL_EPS::Float64
+
+    function DecayCutPruner(maxncuts::Int, λ=0.9, newcuttrust=0.8, mycutbonus=1, tol=1e-6)#newcuttrust=(1/(1/0.9-1))/2, mycutbonus=(1/(1/0.9-1))/2)
+        new(spzeros(T, 0, N), T[], 0, 0, Int[], Int[], maxncuts, Float64[], Int[], 0, λ, newcuttrust, mycutbonus, tol)
     end
 end
 
