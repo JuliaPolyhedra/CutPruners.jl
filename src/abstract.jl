@@ -234,7 +234,7 @@ function checkredundancy{T}(A::AbstractMatrix{T}, b::AbstractVector{T},
     for kk in 1:nnew
         λ = @view Anew[kk, :]
         chk, indk = isinside(A, λ)
-        if chk && (bnew[kk] <= b[indk])
+        if chk && (bnew[kk] >= b[indk])
             push!(redundants, kk)
         end
     end
