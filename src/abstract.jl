@@ -73,6 +73,18 @@ function addcuts!{N, T}(man::AbstractCutPruner{N, T},
                      mycut::AbstractVector{Bool})
     # get current number of cuts:
     ncur = ncuts(man)
+
+    # check redundancy
+    redundants = checkredundancy(man.cuts_DE, man.cuts_de, A, b)
+    tokeep = setdiff(collect(1:size(A, 1)), redundants)
+
+    # if all cuts are redundants, then do nothing:
+    if length(tokeep) == 0
+        return []
+    end
+    A = A[tokeep, :]
+    b = b[tokeep]
+
     # get number of new cuts in A:
     nnew = size(A, 1)
     @assert length(mycut) == length(b) == nnew
@@ -204,3 +216,43 @@ end
 function newids(man::AbstractCutPruner, n::Int)
     (man.id+1):(man.id += n)
 end
+
+
+"""
+Check redundant cuts. Return index of redundant cuts in `Anew`.
+
+$(SIGNATURES)
+
+"""
+function checkredundancy{T}(A::AbstractMatrix{T}, b::AbstractVector{T},
+                            Anew::AbstractMatrix{T}, bnew::AbstractVector{T})
+    # index of redundants cuts
+    redundants = Int[]
+    # number of new lines
+    nnew = size(Anew, 1)
+
+    for kk in 1:nnew
+        λ = @view Anew[kk, :]
+        chk, indk = isinside(A, λ)
+        if chk && (bnew[kk] <= b[indk])
+            push!(redundants, kk)
+        end
+    end
+
+    redundants
+end
+
+
+"""Check if `λ` is a line of matrix `A`."""
+function isinside{T}(A::AbstractMatrix{T}, λ::AbstractVector{T})
+    nlines = size(A, 1)
+
+    check = false
+    k = 0
+    while ~check && k < nlines
+        k += 1
+        check = (A[k, :] == λ)
+    end
+    check, k
+end
+
