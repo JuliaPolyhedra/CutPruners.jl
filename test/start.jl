@@ -6,6 +6,7 @@
             @test ncuts(pruner) == 0
             @test CutPruners.isfun(pruner) == (sense in [:Min, :Max])
             @test CutPruners.islb(pruner) == (sense in [:Max, :≥])
+            @test CutPruners.getsense(pruner) == sense
         end
     end
 end

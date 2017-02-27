@@ -41,7 +41,7 @@ type LevelOneCutPruner{N, T} <: AbstractCutPruner{N, T}
     TOL_EPS::Float64
 
     function LevelOneCutPruner(sense::Symbol, maxncuts::Int, tol=1e-6)
-        isfun, islb = sense2isfunislb(sense)
+        isfun, islb = gettype(sense)
         new(isfun, islb, spzeros(T, 0, N), T[], maxncuts, nothing, Int[], 0, [], 0, zeros(T, 0, N), tol)
     end
 end
