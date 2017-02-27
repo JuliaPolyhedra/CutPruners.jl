@@ -32,7 +32,7 @@ The mapping between `sense` and these two booleans is given by the following tab
 """
 abstract AbstractCutPruner{N, T}
 
-function sense2isfunislb(sense::Symbol)
+function gettype(sense::Symbol)
     if sense == :Min
         true, false
     elseif sense == :Max
@@ -45,7 +45,14 @@ function sense2isfunislb(sense::Symbol)
         throw(ArgumentError("Invalid value `$sense' for sense. It should be :Min, :Max, :≤ or :≥."))
     end
 end
-
+function getsense(isfun::Bool, islb::Bool)
+    if isfun
+        islb ? :Max : :Min
+    else
+        islb ? :≥ : :≤
+    end
+end
+getsense(pruner::AbstractCutPruner) = getsense(isfun(pruner), islb(pruner))
 isfun(pruner::AbstractCutPruner) = pruner.isfun
 islb(pruner::AbstractCutPruner) = pruner.islb
 
