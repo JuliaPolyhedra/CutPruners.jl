@@ -6,18 +6,59 @@ export CutPruner, AbstractCutPruner, addcuts!, ncuts
 
 abstract AbstractCutPruningAlgo
 
+"""
+A cut pruner maintains a matrix `A` and a vector `b` such that
+represents `size(A, 1)` (` == length(b)`) cuts.
+Let `a_i` be `A[i,:]` and `β_i` be `b[i]`, the meaning of the cut depends on the sense.
+Cuts (A, b) defines the half-space satisfying:
+Ax >= b if islb
+Ax <= b otherwise
+If `sense` is
+* `:Min`, then the cut pruner represents the concave polyhedral function `min ⟨a_i, x⟩ + β_i`;
+* `:Max`, then the cut pruner represents the convex polyhedral function `max ⟨a_i, x⟩ + β_i`;
+* `:≤`, then the cut pruner represents the polyhedra defined by the intersection of the half-space `⟨a_i, x⟩ ≤ β_i`;
+* `:≥`, then the cut pruner represents the polyhedra defined by the intersection of the half-space `⟨a_i, x⟩ ≥ β_i`.
+
+Internally, instead of `sense`, the booleans `isfun` and `islb` are stored.
+The mapping between `sense` and these two booleans is given by the following table
+
+| `sense` | `isfun` | `islb` |
+| ------- | ------- | ------ |
+| Min     | true    | false  |
+| Max     | true    | true   |
+| ≤       | false   | false  |
+| ≥       | false   | true   |
+
+"""
 abstract AbstractCutPruner{N, T}
+
+function sense2isfunislb(sense::Symbol)
+    if sense == :Min
+        true, false
+    elseif sense == :Max
+        true, true
+    elseif sense == :≤
+        false, false
+    elseif sense == :≥
+        false, true
+    else
+        throw(ArgumentError("Invalid value `$sense' for sense. It should be :Min, :Max, :≤ or :≥."))
+    end
+end
+
+isfun(pruner::AbstractCutPruner) = pruner.isfun
+islb(pruner::AbstractCutPruner) = pruner.islb
 
 immutable CutPruner{N, T} end
 
 """Return whether the CutPruner `man` has any cut."""
 function Base.isempty(man::AbstractCutPruner)
-    return isempty(man.cuts_de)
+    return isempty(man.b)
 end
 
 """Return number of cuts in CutPruner `man`."""
 function ncuts(man::AbstractCutPruner)
-    return length(man.cuts_de)
+    return length(man.b)
 end
 
 # COMPARISON
@@ -63,9 +104,7 @@ isbetter(man::AbstractCutPruner, i::Int, mycut::Bool) = gettrust(man)[i] > initi
 
 # CHANGE
 
-# Add cut ax >= β
-# FIXME: Ax >= b ?
-# If fc then it is a feasibility cut, otherwise it is an optimality cut
+# Add cuts Ax >= b
 # If mycut then the cut has been added because of one of my trials
 function addcuts!{N, T}(man::AbstractCutPruner{N, T},
                      A::AbstractMatrix{T},
@@ -76,7 +115,7 @@ function addcuts!{N, T}(man::AbstractCutPruner{N, T},
     nincumbents = size(A, 1)
 
     # check redundancy
-    redundants = checkredundancy(man.cuts_DE, man.cuts_de, A, b, man.TOL_EPS)
+    redundants = checkredundancy(man.A, man.b, A, b, man.isfun, man.islb, man.TOL_EPS)
     tokeep = setdiff(collect(1:nincumbents), redundants)
 
     # if all cuts are redundants, then do nothing:
@@ -175,16 +214,16 @@ function addcuts!{N, T}(man::AbstractCutPruner{N, T},
             mycut = @view mycut[pushed]
         end
         if nreplaced > 0
-            man.cuts_DE[R, :] = Ar
-            man.cuts_de[R] = br
+            man.A[R, :] = Ar
+            man.b[R] = br
             replacecuts!(man, R, mycutr)
         end
     end
     if !isempty(b)
         # Just append cuts
         status = ncur + (1:nnew)
-        man.cuts_DE = [man.cuts_DE; A]
-        man.cuts_de = [man.cuts_de; b]
+        man.A = [man.A; A]
+        man.b = [man.b; b]
         pushcuts!(man, mycut)
     end
 
@@ -193,8 +232,8 @@ end
 
 """Keep only cuts whose indexes are in Vector `K`."""
 function keeponly!(man::AbstractCutPruner, K::AbstractVector{Int})
-    man.cuts_DE = man.cuts_DE[K, :]
-    man.cuts_de = man.cuts_de[K]
+    man.A = man.A[K, :]
+    man.b = man.b[K]
     man.trust = man.trust[K]
 end
 
@@ -218,6 +257,15 @@ function newids(man::AbstractCutPruner, n::Int)
     (man.id+1):(man.id += n)
 end
 
+function normalizedcut{T}(A::AbstractMatrix{T}, b::AbstractVector{T}, k::Int, isfun::Bool, tol::Float64)
+    a = @view A[k, :]
+    β = b[k]
+    if isfun || abs(β) < tol
+        a, β
+    else
+        a / β, one(T)
+    end
+end
 
 """
 Check redundant cuts. Return index of redundant cuts in `Anew`.
@@ -227,17 +275,20 @@ $(SIGNATURES)
 """
 function checkredundancy{T}(A::AbstractMatrix{T}, b::AbstractVector{T},
                             Anew::AbstractMatrix{T}, bnew::AbstractVector{T},
-                            tol::Float64)
+                            isfun::Bool, islb::Bool, tol::Float64)
     # index of redundants cuts
     redundants = Int[]
     # number of new lines
     nnew = size(Anew, 1)
 
     for kk in 1:nnew
-        λ = @view Anew[kk, :]
-        chk, indk = isinside(A, λ, tol)
-        if chk && (bnew[kk] >= b[indk])
-            push!(redundants, kk)
+        a, β = normalizedcut(Anew, bnew, kk, isfun, tol)
+        chk, indk = isinside(A, b, a, isfun, tol)
+        if chk
+            ared, βred = normalizedcut(A, b, indk, isfun, tol)
+            if islb ? β <= βred+tol : β+tol >= βred
+                push!(redundants, kk)
+            end
         end
     end
 
@@ -245,16 +296,16 @@ function checkredundancy{T}(A::AbstractMatrix{T}, b::AbstractVector{T},
 end
 
 
-"""Check if `λ` is a line of matrix `A`."""
-function isinside{T}(A::AbstractMatrix{T}, λ::AbstractVector{T}, tol::Float64)
+"""Check if `λ` is a line of matrix `A`. `λ` might not have the same `eltype` as `A` and `b` as it might have been scaled by `normalizecut`."""
+function isinside{T}(A::AbstractMatrix{T}, b::AbstractVector{T}, λ::AbstractVector, isfun::Bool, tol::Float64)
     nlines = size(A, 1)
 
     check = false
     k = 0
     while ~check && k < nlines
         k += 1
-        check = norm(A[k, :] - λ, Inf) < tol
+        a, β = normalizedcut(A, b, k, isfun, tol)
+        check = norm(a - λ, Inf) < tol
     end
     check, k
 end
-
