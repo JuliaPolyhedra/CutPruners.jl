@@ -21,8 +21,10 @@ If `nwidth` is zero, `nused/nwith` is replaced by `newcuttrust`.
 """
 type LevelOneCutPruner{N, T} <: AbstractCutPruner{N, T}
     # used to generate cuts
-    cuts_DE::AbstractMatrix{T}
-    cuts_de::AbstractVector{T}
+    isfun::Bool
+    islb::Bool
+    A::AbstractMatrix{T}
+    b::AbstractVector{T}
 
     maxncuts::Int
 
@@ -38,12 +40,13 @@ type LevelOneCutPruner{N, T} <: AbstractCutPruner{N, T}
     # tolerance to check redundancy between two cuts
     TOL_EPS::Float64
 
-    function LevelOneCutPruner(maxncuts::Int, tol=1e-6)
-        new(spzeros(T, 0, N), T[], maxncuts, nothing, Int[], 0, [], 0, zeros(T, 0, N), tol)
+    function LevelOneCutPruner(sense::Symbol, maxncuts::Int, tol=1e-6)
+        isfun, islb = sense2isfunislb(sense)
+        new(isfun, islb, spzeros(T, 0, N), T[], maxncuts, nothing, Int[], 0, [], 0, zeros(T, 0, N), tol)
     end
 end
 
-(::Type{CutPruner{N, T}}){N, T}(algo::LevelOnePruningAlgo) = LevelOneCutPruner{N, T}(algo.maxncuts)
+(::Type{CutPruner{N, T}}){N, T}(algo::LevelOnePruningAlgo, sense::Symbol) = LevelOneCutPruner{N, T}(sense, algo.maxncuts)
 
 
 """Update territories with cuts previously computed during backward pass.
@@ -119,10 +122,7 @@ function optimalcut{T}(man::LevelOneCutPruner,
     nc = ncuts(man)
 
     @inbounds for i in 1:nc
-        cost = -man.cuts_de[i]
-        for j in 1:dimstates
-            cost += man.cuts_DE[i, j]*xf[j]
-        end
+        cost = cutvalue(man, i, xf)
         if cost > bestcost
             bestcost = cost
             bestcut = i
@@ -171,21 +171,24 @@ $(SIGNATURES)
 # Arguments
 - `man::LevelOneCutPruner`
     Approximation of the value function as linear cuts
-- `indc::Int64`
+- `indc::Int`
     Index of cut to consider
-- `x::Array{Float64}`
+- `x::Vector`
     Coordinates of state
 
 # Return
 `cost::Float64`
-    Value of cut `indc` at point `x`
+    Value of cut `indc` at point `x`.
+    If `man` is a polyhedral function, then it is the value of the cut at `x`,
+    otherwise, it is the distance between `x` and the cut.
+    As a rule of thumb, the higher the `cutvalue` is, the less it is redundant.
 """
-function cutvalue(man::LevelOneCutPruner, indc::Int, x::Vector{Float64})
-    cost = -man.cuts_de[indc]
-    for j in 1:length(x)
-        cost += man.cuts_DE[indc, j]*x[j]
-    end
-    cost
+function cutvalue{T}(man::LevelOneCutPruner, indc::Int, x::Vector{T})
+    β = man.b[indc]
+    a = @view man.A[indc, :]
+    ax = dot(a, x)
+    cost = isfun(man) ? ax + β : (β - ax) / norm(a, 2)
+    islb(man) ? cost : -cost
 end
 
 

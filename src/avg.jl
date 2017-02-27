@@ -21,20 +21,10 @@ end
 
 type AvgCutPruner{N, T} <: AbstractCutPruner{N, T}
     # used to generate cuts
-    # Cuts (A, b) defines the half-space satisfying: Ax >= b
-    # A
-    cuts_DE::AbstractMatrix{T}
-    # b
-    cuts_de::AbstractVector{T}
-
-    # number of optimality cuts
-    nσ::Int
-    # number of feasibility cuts
-    nρ::Int
-    # index of optimality cuts
-    σs::Vector{Int}
-    # index of feasibility cuts
-    ρs::Vector{Int}
+    isfun::Bool
+    islb::Bool
+    A::AbstractMatrix{T}
+    b::AbstractVector{T}
 
     # maximum number of cuts
     maxncuts::Int
@@ -54,15 +44,16 @@ type AvgCutPruner{N, T} <: AbstractCutPruner{N, T}
     # tolerance to check redundancy between two cuts
     TOL_EPS::Float64
 
-    function AvgCutPruner(maxncuts::Int, newcuttrust=3/4, mycutbonus=1/4; tol=1e-6)
-        new(spzeros(T, 0, N), T[], 0, 0, Int[], Int[], maxncuts, Int[], Int[], Bool[], nothing, Int[], 0, newcuttrust, mycutbonus, tol)
+    function AvgCutPruner(sense::Symbol, maxncuts::Int, newcuttrust=3/4, mycutbonus=1/4; tol=1e-6)
+        isfun, islb = sense2isfunislb(sense)
+        new(isfun, islb, spzeros(T, 0, N), T[], maxncuts, Int[], Int[], Bool[], nothing, Int[], 0, newcuttrust, mycutbonus, tol)
     end
 end
 
-(::Type{CutPruner{N, T}}){N, T}(algo::AvgCutPruningAlgo) = AvgCutPruner{N, T}(algo.maxncuts, algo.newcuttrust, algo.mycutbonus)
+(::Type{CutPruner{N, T}}){N, T}(algo::AvgCutPruningAlgo, sense::Symbol) = AvgCutPruner{N, T}(sense, algo.maxncuts, algo.newcuttrust, algo.mycutbonus)
 
 # COMPARISON
-"""Update cuts relevantness after a solver's call returning dual vector `σ\rho`."""
+"""Update cuts relevantness after a solver's call returning dual vector `σρ`."""
 function updatestats!(man::AvgCutPruner, σρ)
     if ncuts(man) > 0
         man.nwith += 1
@@ -90,7 +81,7 @@ end
 
 # CHANGE
 
-#FIXME: do not drop cuts in cuts_DE and cuts_de?
+#FIXME: do not drop cuts in A and b?
 function keeponly!(man::AvgCutPruner, K::AbstractVector{Int})
     man.nwith = man.nwith[K]
     man.nused = man.nused[K]
