@@ -28,7 +28,7 @@ type LevelOneCutPruner{N, T} <: AbstractCutPruner{N, T}
 
     maxncuts::Int
 
-    trust::Nullable{Vector{Float64}}
+    trust::Vector{Float64}
     ids::Vector{Int} # small id means old
     id::Int # current id
 
@@ -42,12 +42,13 @@ type LevelOneCutPruner{N, T} <: AbstractCutPruner{N, T}
 
     function LevelOneCutPruner(sense::Symbol, maxncuts::Int, tol=1e-6)
         isfun, islb = gettype(sense)
-        new(isfun, islb, spzeros(T, 0, N), T[], maxncuts, nothing, Int[], 0, [], 0, zeros(T, 0, N), tol)
+        new(isfun, islb, spzeros(T, 0, N), T[], maxncuts, Tuple{Int64, T}[], Int[], 0, [], 0, zeros(T, 0, N), tol)
     end
 end
 
 (::Type{CutPruner{N, T}}){N, T}(algo::LevelOnePruningAlgo, sense::Symbol) = LevelOneCutPruner{N, T}(sense, algo.maxncuts)
 
+getnreplaced(man::LevelOneCutPruner, R, ncur, nnew, mycut) = nnew, length(R)
 
 """Update territories with cuts previously computed during backward pass.
 
@@ -59,24 +60,14 @@ $(SIGNATURES)
     New visited positions
 """
 function updatestats!{T}(man::LevelOneCutPruner, position::Array{T, 2})
-    nc = ncuts(man)
     # get number of new positions to analyse:
     nx = size(position, 1)
-    # get number of cuts added since last update:
-    nt = nc - length(man.territories)
-
-    man.territories = vcat(man.territories, [Tuple{Int64, T}[] for _ in 1:nt])
-    for i in 1:nt
-        # update territory for new cut with index i
-        updateterritory!(man, nc - nt + i)
-    end
 
     for i in 1:nx
         addstate!(man, position[i, :])
     end
 
-    # need to be recomputed
-    man.trust = nothing
+    updatetrust!(man)
 end
 
 
@@ -86,18 +77,20 @@ $(SIGNATURES)
 
 """
 function addstate!(man::LevelOneCutPruner, x::Vector)
-    # Get cut which is active at point `x`:
-    bcost, bcuts = optimalcut(man, x)
-
     # update number of states
     man.nstates += 1
-    # Add `x` with index nstates  to the territory of cut with index `bcuts`:
-    push!(man.territories[bcuts], (man.nstates, bcost))
-
     # Add `x` to the list of visited state:
     man.states = vcat(man.states, x')
+
+    giveterritory!(man, man.nstates, x)
 end
 
+function giveterritory!(man::LevelOneCutPruner, ix::Int, x::Vector=man.states[ix, :])
+    # Get cut which is active at point `x`:
+    bcost, bcuts = optimalcut(man, x)
+    # Add `x` with index nstates  to the territory of cut with index `bcuts`:
+    push!(man.territories[bcuts], (ix, bcost))
+end
 
 """Find active cut at point `xf`.
 
@@ -143,6 +136,7 @@ $(SIGNATURES)
     new cut index
 """
 function updateterritory!(man::LevelOneCutPruner, indcut::Int64)
+    @assert length(man.territories) == ncuts(man)
     for k in 1:ncuts(man)
         if k == indcut
             continue
@@ -191,46 +185,53 @@ function cutvalue{T}(man::LevelOneCutPruner, indc::Int, x::Vector{T})
     islb(man) ? cost : -cost
 end
 
+flength(a)::Float64 = length(a)
 
-function gettrustof(man::LevelOneCutPruner, nwith, nused, mycut)
-    (nwith == 0 ? man.newcuttrust : nused / nwith) + (mycut ? man.mycutbonus : 0)
-end
-
-initialtrust(man::LevelOneCutPruner, mycut) = 0
-
-function gettrust(man::LevelOneCutPruner)
-    if isnull(man.trust) || ~checkconsistency(man)
-        trust = Float64[length(terr) for terr in man.territories]
-        man.trust = trust
+function updatetrust!(man)
+    @assert length(man.territories) == ncuts(man)
+    if ncuts(man) == length(man.trust)
+        # Avoid new allocation. Avoiding this allocation is the whole point of
+        # doint updatetrust! instead of doing trust = nothing
+        for i in 1:ncuts(man)
+            man.trust[i] = length(man.territories[i])
+        end
+    else
+        man.trust = flength.(man.territories)
     end
-    get(man.trust)
 end
 
-
-function keeponly!(man::LevelOneCutPruner, K::AbstractVector{Int})
-    man.trust = gettrust(man)[K]
-end
-
-
-function replacecuts!(man::LevelOneCutPruner, js::AbstractVector{Int}, mycut::AbstractVector{Bool})
-    gettrust(man)[js] = initialtrusts(man, mycut)
-    man.territories = man.territories[js]
-    man.ids[js] = newids(man, length(js))
+function replacecuts!{N, T}(man::LevelOneCutPruner{N, T}, K::AbstractVector{Int}, A, b, mycut::AbstractVector{Bool})
+    @assert length(man.territories) == ncuts(man)
+    # FIXME If K is 1:ncuts, then checkconsistency will be true and trust will not be recomputed by gettrust
+    _replacecuts!(man, K, A, b)
+    # Do not do view here since will will modify the entries
+    freeterritories = man.territories[K]
+    for k in K
+        man.territories[k] = Tuple{Int64, T}[]
+    end
+    for k in K
+        updateterritory!(man, k)
+    end
+    for freet in freeterritories
+        for (ik, _) in freet
+            giveterritory!(man, ik)
+        end
+    end
+    updatetrust!(man)
+    @assert length(man.territories) == ncuts(man)
 end
 
 
 """Push new cut in CutPruner `man`."""
-function pushcuts!(man::LevelOneCutPruner, mycut::AbstractVector{Bool})
-    n = length(mycut)
-    if !isnull(man.trust)
-        append!(get(man.trust), initialtrusts(man, mycut))
+function appendcuts!{N, T}(man::LevelOneCutPruner{N, T}, A, b, mycut::AbstractVector{Bool})
+    @assert length(man.territories) == ncuts(man)
+    oldncuts = ncuts(man)
+    _appendcuts!(man, A, b)
+    nnew = length(b)
+    man.territories = vcat(man.territories, [Tuple{Int64, T}[] for _ in 1:nnew])
+    for k in oldncuts+(1:nnew)
+        updateterritory!(man, k)
     end
-    append!(man.ids, newids(man, n))
-end
-
-
-"""Check consistency of CutPruner `man`."""
-function checkconsistency(man::LevelOneCutPruner)
-    consistency = (ncuts(man) == length(man.territories))
-    consistency
+    updatetrust!(man)
+    @assert length(man.territories) == ncuts(man)
 end

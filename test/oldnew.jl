@@ -15,10 +15,10 @@
 # another optimality cut it will be ignored !
 for algo in [AvgCutPruningAlgo(3), DecayCutPruningAlgo(3)]
     @testset "Oldest removed first for $(typeof(algo))" begin
-        pruner = CutPruner{2, Int}(algo, :≤)
+        pruner = CutPruner{2, Int}(algo, :Max)
         addcuts!(pruner, [1 0], [0], [true])
         # add redundants cuts: this cut will not be added to pruner
-        addcuts!(pruner, [1 0], [1], [true])
+        addcuts!(pruner, [1 0], [0], [true])
         @test ncuts(pruner) == 1
 
         addcuts!(pruner, [2 0], [0], [true])

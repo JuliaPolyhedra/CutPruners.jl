@@ -50,6 +50,7 @@ end
 (::Type{CutPruner{N, T}}){N, T}(algo::DecayCutPruningAlgo, sense::Symbol) = DecayCutPruner{N, T}(sense, algo.maxncuts, algo.λ, algo.newcuttrust, algo.mycutbonus)
 
 # COMPARISON
+
 function updatestats!(man::DecayCutPruner, σρ)
     if ncuts(man) > 0
         man.trust *= man.λ

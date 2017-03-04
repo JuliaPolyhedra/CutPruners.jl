@@ -69,8 +69,11 @@ end
 function initialtrust(man::AvgCutPruner, mycut)
     gettrustof(man, 0, 0, mycut)
 end
+function hastrust(man::AvgCutPruner)
+    !isnull(man.trust)
+end
 function gettrust(man::AvgCutPruner)
-    if isnull(man.trust)
+    if !hastrust(man)
         trust = man.nused ./ man.nwith
         trust[man.nwith .== 0] = man.newcuttrust
         trust[man.mycut] += man.mycutbonus
@@ -81,30 +84,30 @@ end
 
 # CHANGE
 
-#FIXME: do not drop cuts in A and b?
-function keeponly!(man::AvgCutPruner, K::AbstractVector{Int})
+function keeponlycuts!(man::AvgCutPruner, K::AbstractVector{Int})
     man.nwith = man.nwith[K]
     man.nused = man.nused[K]
     man.mycut = man.mycut[K]
-    man.trust = gettrust(man)[K]
+    _keeponlycuts!(man, K)
 end
 
-function replacecuts!(man::AvgCutPruner, js::AbstractVector{Int}, mycut::AbstractVector{Bool})
-    man.nwith[js] = 0
-    man.nused[js] = 0
-    man.mycut[js] = mycut
-    gettrust(man)[js] = initialtrusts(man, mycut)
-    man.ids[js] = newids(man, length(js))
+function replacecuts!(man::AvgCutPruner, K::AbstractVector{Int}, A, b, mycut::AbstractVector{Bool})
+    man.nwith[K] = 0
+    man.nused[K] = 0
+    man.mycut[K] = mycut
+    _replacecuts!(man, K, A, b)
+    if hastrust(man)
+        get(man.trust)[K] = initialtrusts(man, mycut)
+    end
 end
 
-"""Push new cut in CutPruner `man`."""
-function pushcuts!(man::AvgCutPruner, mycut::AbstractVector{Bool})
+function appendcuts!(man::AvgCutPruner, A, b, mycut::AbstractVector{Bool})
     n = length(mycut)
     append!(man.nwith, zeros(n))
     append!(man.nused, zeros(n))
     append!(man.mycut, mycut)
-    if !isnull(man.trust)
+    _appendcuts!(man, A, b)
+    if hastrust(man)
         append!(get(man.trust), initialtrusts(man, mycut))
     end
-    append!(man.ids, newids(man, n))
 end

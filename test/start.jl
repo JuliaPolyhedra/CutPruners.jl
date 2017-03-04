@@ -3,11 +3,29 @@
         @test_throws ArgumentError CutPruner{2, Int}(algo, :Mix)
         for sense in [:Min, :Max, :≤, :≥]
             pruner = CutPruner{2, Int}(algo, sense)
+            @test isempty(pruner)
             @test ncuts(pruner) == 0
             @test CutPruners.isfun(pruner) == (sense in [:Min, :Max])
             @test CutPruners.islb(pruner) == (sense in [:Max, :≥])
             @test CutPruners.getsense(pruner) == sense
         end
+    end
+end
+
+@testset "Keeponly" begin
+    for algo in [AvgCutPruningAlgo(3), DecayCutPruningAlgo(3), LevelOnePruningAlgo(3)]
+        pruner = CutPruner{2, Int}(algo, :≤)
+        @test isempty(pruner)
+        addcuts!(pruner, [1 2; 3 4; 5 6], [7, 8, 9], BitArray(3))
+        @test !isempty(pruner)
+        keeponlycuts!(pruner, [3, 1])
+        @test pruner.A == [5 6; 1 2]
+        @test pruner.b == [9, 7]
+        @test pruner.ids == [3, 1]
+        removecuts!(pruner, [2])
+        @test pruner.A == [5 6]
+        @test pruner.b == [9]
+        @test pruner.ids == [3]
     end
 end
 
