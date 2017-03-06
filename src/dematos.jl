@@ -1,10 +1,10 @@
-export LevelOneCutPruner, LevelOnePruningAlgo
+export DeMatosCutPruner, DeMatosPruningAlgo
 
 
-type LevelOnePruningAlgo <: AbstractCutPruningAlgo
+type DeMatosPruningAlgo <: AbstractCutPruningAlgo
     # maximum number of cuts
     maxncuts::Int
-    function LevelOnePruningAlgo(maxncuts::Int)
+    function DeMatosPruningAlgo(maxncuts::Int)
         new(maxncuts)
     end
 end
@@ -19,7 +19,7 @@ We say that the cut was used if its dual value is nonzero.
 It has a bonus equal to `mycutbonus` if the cut was generated using a trial given by the problem using this cut.
 If `nwidth` is zero, `nused/nwith` is replaced by `newcuttrust`.
 """
-type LevelOneCutPruner{N, T} <: AbstractCutPruner{N, T}
+type DeMatosCutPruner{N, T} <: AbstractCutPruner{N, T}
     # used to generate cuts
     isfun::Bool
     islb::Bool
@@ -40,26 +40,26 @@ type LevelOneCutPruner{N, T} <: AbstractCutPruner{N, T}
     # tolerance to check redundancy between two cuts
     TOL_EPS::Float64
 
-    function LevelOneCutPruner(sense::Symbol, maxncuts::Int, tol=1e-6)
+    function DeMatosCutPruner(sense::Symbol, maxncuts::Int, tol=1e-6)
         isfun, islb = gettype(sense)
         new(isfun, islb, spzeros(T, 0, N), T[], maxncuts, Tuple{Int64, T}[], Int[], 0, [], 0, zeros(T, 0, N), tol)
     end
 end
 
-(::Type{CutPruner{N, T}}){N, T}(algo::LevelOnePruningAlgo, sense::Symbol) = LevelOneCutPruner{N, T}(sense, algo.maxncuts)
+(::Type{CutPruner{N, T}}){N, T}(algo::DeMatosPruningAlgo, sense::Symbol) = DeMatosCutPruner{N, T}(sense, algo.maxncuts)
 
-getnreplaced(man::LevelOneCutPruner, R, ncur, nnew, mycut) = nnew, length(R)
+getnreplaced(man::DeMatosCutPruner, R, ncur, nnew, mycut) = nnew, length(R)
 
 """Update territories with cuts previously computed during backward pass.
 
 $(SIGNATURES)
 
 # Arguments
-* `man::LevelOneCutPruner`
+* `man::DeMatosCutPruner`
 * `position::Array{T, 2}`
     New visited positions
 """
-function updatestats!{T}(man::LevelOneCutPruner, position::Array{T, 2})
+function updatestats!{T}(man::DeMatosCutPruner, position::Array{T, 2})
     # get number of new positions to analyse:
     nx = size(position, 1)
 
@@ -76,7 +76,7 @@ end
 $(SIGNATURES)
 
 """
-function addstate!(man::LevelOneCutPruner, x::Vector)
+function addstate!(man::DeMatosCutPruner, x::Vector)
     # update number of states
     man.nstates += 1
     # Add `x` to the list of visited state:
@@ -85,7 +85,7 @@ function addstate!(man::LevelOneCutPruner, x::Vector)
     giveterritory!(man, man.nstates, x)
 end
 
-function giveterritory!(man::LevelOneCutPruner, ix::Int, x::Vector=man.states[ix, :])
+function giveterritory!(man::DeMatosCutPruner, ix::Int, x::Vector=man.states[ix, :])
     # Get cut which is active at point `x`:
     bcost, bcuts = optimalcut(man, x)
     # Add `x` with index nstates  to the territory of cut with index `bcuts`:
@@ -97,7 +97,7 @@ end
 $(SIGNATURES)
 
 # Arguments
-* `man::LevelOneCutPruner`:
+* `man::DeMatosCutPruner`:
     CutPruner
 * `xf::Vector{Float64}`:
 
@@ -107,7 +107,7 @@ $(SIGNATURES)
 `bestcut::Int64`
     Index of supporting cut at point `xf`
 """
-function optimalcut{T}(man::LevelOneCutPruner,
+function optimalcut{T}(man::DeMatosCutPruner,
                        xf::Vector{T})
     bestcost = -Inf::Float64
     bestcut = -1
@@ -131,11 +131,11 @@ end
 $(SIGNATURES)
 
 # Arguments
-* `man::LevelOneCutPruner`:
+* `man::DeMatosCutPruner`:
 * `indcut::Int64`:
     new cut index
 """
-function updateterritory!(man::LevelOneCutPruner, indcut::Int64)
+function updateterritory!(man::DeMatosCutPruner, indcut::Int64)
     @assert length(man.territories) == ncuts(man)
     for k in 1:ncuts(man)
         if k == indcut
@@ -163,7 +163,7 @@ Get value of cut with index `indc` at point `x`.
 $(SIGNATURES)
 
 # Arguments
-- `man::LevelOneCutPruner`
+- `man::DeMatosCutPruner`
     Approximation of the value function as linear cuts
 - `indc::Int`
     Index of cut to consider
@@ -177,7 +177,7 @@ $(SIGNATURES)
     otherwise, it is the distance between `x` and the cut.
     As a rule of thumb, the higher the `cutvalue` is, the less it is redundant.
 """
-function cutvalue{T}(man::LevelOneCutPruner, indc::Int, x::Vector{T})
+function cutvalue{T}(man::DeMatosCutPruner, indc::Int, x::Vector{T})
     β = man.b[indc]
     a = @view man.A[indc, :]
     ax = dot(a, x)
@@ -200,7 +200,7 @@ function updatetrust!(man)
     end
 end
 
-function replacecuts!{N, T}(man::LevelOneCutPruner{N, T}, K::AbstractVector{Int}, A, b, mycut::AbstractVector{Bool})
+function replacecuts!{N, T}(man::DeMatosCutPruner{N, T}, K::AbstractVector{Int}, A, b, mycut::AbstractVector{Bool})
     @assert length(man.territories) == ncuts(man)
     # FIXME If K is 1:ncuts, then checkconsistency will be true and trust will not be recomputed by gettrust
     _replacecuts!(man, K, A, b)
@@ -223,7 +223,7 @@ end
 
 
 """Push new cut in CutPruner `man`."""
-function appendcuts!{N, T}(man::LevelOneCutPruner{N, T}, A, b, mycut::AbstractVector{Bool})
+function appendcuts!{N, T}(man::DeMatosCutPruner{N, T}, A, b, mycut::AbstractVector{Bool})
     @assert length(man.territories) == ncuts(man)
     oldncuts = ncuts(man)
     _appendcuts!(man, A, b)
