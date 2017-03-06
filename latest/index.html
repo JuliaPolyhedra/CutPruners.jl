@@ -110,14 +110,14 @@
 </code></pre>
 
 <p>Removes the cuts with lower trust where the trust is initially <code>newcuttrust + bonus</code> and is updated using <code>trust -&gt; λ * trust + used</code> after each optimization done with it. The value <code>used</code> is 1 if the cut was used and 0 otherwise. It has a bonus equal to <code>mycutbonus</code> if the cut was generated using a trial given by the problem using this cut. We say that the cut was used if its dual value is nonzero.</p>
-<p><a target='_blank' href='https://github.com/JuliaPolyhedra/CutPruners.jl/tree/0cc5d64bdc5b8932be2f92e26cb86de360b434d2/src/decay.jl#L3' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/JuliaPolyhedra/CutPruners.jl/tree/4a5c11bd6804d96e129bb1998f87592b03327186/src/decay.jl#L3' class='documenter-source'>source</a><br></p>
 <p><a id='CutPruners.AvgCutPruningAlgo' href='#CutPruners.AvgCutPruningAlgo'>#</a>
 <strong><code>CutPruners.AvgCutPruningAlgo</code></strong> &mdash; <em>Type</em>.</p>
 <pre><code class="julia">type AvgCutPruningAlgo &lt;: CutPruners.AbstractCutPruningAlgo
 </code></pre>
 
 <p>Removes the cuts with lower trust where the trust is: nused / nwith + bonus where the cut has been used <code>nused</code> times amoung <code>nwith</code> optimization done with it. We say that the cut was used if its dual value is nonzero. It has a bonus equal to <code>mycutbonus</code> if the cut was generated using a trial given by the problem using this cut. If <code>nwidth</code> is zero, <code>nused/nwith</code> is replaced by <code>newcuttrust</code>.</p>
-<p><a target='_blank' href='https://github.com/JuliaPolyhedra/CutPruners.jl/tree/0cc5d64bdc5b8932be2f92e26cb86de360b434d2/src/avg.jl#L3' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/JuliaPolyhedra/CutPruners.jl/tree/4a5c11bd6804d96e129bb1998f87592b03327186/src/avg.jl#L3' class='documenter-source'>source</a><br></p>
 <p><a id='Index-1'></a></p>
 <h2 id="index">Index</h2>
 <ul>
@@ -165,5 +165,5 @@
 
 <!--
 MkDocs version : 0.16.1
-Build Date UTC : 2017-03-06 16:32:04
+Build Date UTC : 2017-03-06 21:16:53
 -->
