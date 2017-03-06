@@ -6,7 +6,7 @@ export CutPruner, AbstractCutPruner
 # High-level functions
 export addcuts!, ncuts
 # Low-level functions
-export appendcuts!, replacecuts!, keeponlycuts!, removecuts!
+export appendcuts!, replacecuts!, keeponlycuts!, removecuts!, fetchcuts
 
 abstract AbstractCutPruningAlgo
 
@@ -290,6 +290,10 @@ function appendcuts!(man::AbstractCutPruner, A, b, mycut::AbstractVector{Bool})
     _appendcuts!(man, A, b)
     append!(man.trust, initialtrusts(man, mycut))
 end
+
+"""Return cuts currently stored inside CutPruner `man`."""
+fetchcuts(man::AbstractCutPruner) = (man.A, man.b)
+
 
 # Unexported utilities
 

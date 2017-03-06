@@ -235,3 +235,9 @@ function appendcuts!{N, T}(man::LevelOneCutPruner{N, T}, A, b, mycut::AbstractVe
     updatetrust!(man)
     @assert length(man.territories) == ncuts(man)
 end
+
+
+function fetchcuts(man::LevelOneCutPruner)
+    K =  man.trust .> 0
+    return man.A[K, :], man.b[K]
+end

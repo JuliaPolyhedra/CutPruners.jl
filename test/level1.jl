@@ -34,5 +34,7 @@ end
 
     @test ncuts(pruner) == 1
     # The cut [2 0] is taken even if [1 0] has one territory
-    @test pruner.A == [2 0]
+    A, b = fetchcuts(pruner)
+    @test A == [2 0]
+    @test b == [0]
 end
