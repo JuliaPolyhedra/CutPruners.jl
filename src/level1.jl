@@ -235,3 +235,11 @@ function appendcuts!{N, T}(man::LevelOneCutPruner{N, T}, A, b, mycut::AbstractVe
     updatetrust!(man)
     @assert length(man.territories) == ncuts(man)
 end
+
+
+"""Remove dominated cuts in CutPruner `man`."""
+function prunecuts!(man::LevelOneCutPruner)
+    K =  (1:ncuts(man))[man.trust .== 0]
+    removecuts!(man, K)
+    return K
+end

@@ -43,10 +43,12 @@ type AvgCutPruner{N, T} <: AbstractCutPruner{N, T}
 
     # tolerance to check redundancy between two cuts
     TOL_EPS::Float64
+    # tolerance to prune cuts:
+    TOL_PRUNING::Float64
 
-    function AvgCutPruner(sense::Symbol, maxncuts::Int, newcuttrust=3/4, mycutbonus=1/4; tol=1e-6)
+    function AvgCutPruner(sense::Symbol, maxncuts::Int, newcuttrust=3/4, mycutbonus=1/4; tol=1e-6, tolprun=.1)
         isfun, islb = gettype(sense)
-        new(isfun, islb, spzeros(T, 0, N), T[], maxncuts, Int[], Int[], Bool[], nothing, Int[], 0, newcuttrust, mycutbonus, tol)
+        new(isfun, islb, spzeros(T, 0, N), T[], maxncuts, Int[], Int[], Bool[], nothing, Int[], 0, newcuttrust, mycutbonus, tol, tolprun)
     end
 end
 
@@ -110,4 +112,12 @@ function appendcuts!(man::AvgCutPruner, A, b, mycut::AbstractVector{Bool})
     if hastrust(man)
         append!(get(man.trust), initialtrusts(man, mycut))
     end
+end
+
+function prunecuts!(man::AvgCutPruner)
+    trust = gettrust(man)
+    # remove cuts whose trusts are below tolerance
+    K =  (1:ncuts(man))[trust .<= man.TOL_PRUNING]
+    removecuts!(man, K)
+    return K
 end

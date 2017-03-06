@@ -40,10 +40,14 @@ type DecayCutPruner{N, T} <: AbstractCutPruner{N, T}
 
     # tolerance to check redundancy between two cuts
     TOL_EPS::Float64
+    # tolerance to prune cuts:
+    TOL_PRUNING::Float64
 
-    function DecayCutPruner(sense::Symbol, maxncuts::Int, λ=0.9, newcuttrust=0.8, mycutbonus=1, tol=1e-6)#newcuttrust=(1/(1/0.9-1))/2, mycutbonus=(1/(1/0.9-1))/2)
+    function DecayCutPruner(sense::Symbol, maxncuts::Int, λ=0.9,
+                            newcuttrust=0.8, mycutbonus=1, tol=1e-6, tolprun=.1)
         isfun, islb = gettype(sense)
-        new(isfun, islb, spzeros(T, 0, N), T[], maxncuts, Float64[], Int[], 0, λ, newcuttrust, mycutbonus, tol)
+        new(isfun, islb, spzeros(T, 0, N), T[], maxncuts, Float64[], Int[],
+            0, λ, newcuttrust, mycutbonus, tol, tolprun)
     end
 end
 
@@ -78,4 +82,12 @@ function isbetter(man::DecayCutPruner, i::Int, mycut::Bool)
         # with true instead of false
         man.trust[i] > initialtrust(man, mycut)
     end
+end
+
+function prunecuts!(man::DecayCutPruner)
+    trust = gettrust(man)
+    # remove cuts whose trusts are below tolerance
+    K =  (1:ncuts(man))[trust .<= man.TOL_PRUNING]
+    removecuts!(man, K)
+    return K
 end
