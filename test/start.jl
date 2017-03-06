@@ -1,5 +1,5 @@
 @testset "Initialization" begin
-    for algo in [AvgCutPruningAlgo(1), DecayCutPruningAlgo(1), LevelOnePruningAlgo(3)]
+    for algo in [AvgCutPruningAlgo(1), DecayCutPruningAlgo(1), DeMatosPruningAlgo(3)]
         @test_throws ArgumentError CutPruner{2, Int}(algo, :Mix)
         for sense in [:Min, :Max, :≤, :≥]
             pruner = CutPruner{2, Int}(algo, sense)
@@ -13,7 +13,7 @@
 end
 
 @testset "Keeponly" begin
-    for algo in [AvgCutPruningAlgo(3), DecayCutPruningAlgo(3), LevelOnePruningAlgo(3)]
+    for algo in [AvgCutPruningAlgo(3), DecayCutPruningAlgo(3), DeMatosPruningAlgo(3)]
         pruner = CutPruner{2, Int}(algo, :≤)
         @test isempty(pruner)
         addcuts!(pruner, [1 2; 3 4; 5 6], [7, 8, 9], BitArray(3))

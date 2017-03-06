@@ -1,8 +1,8 @@
 using CutPruners
 using Base.Test
 
-@testset "Level-1 cut pruning" begin
-    algo = LevelOnePruningAlgo(3)
+@testset "DeMatos cut pruning" begin
+    algo = DeMatosPruningAlgo(3)
     pruner = CutPruner{2, Int}(algo, :Max)
     addcuts!(pruner, [1 0], [0], [true])
     addcuts!(pruner, [2 0], [0], [true])
@@ -26,7 +26,7 @@ using Base.Test
 end
 
 @testset "Priority to new cuts" begin
-    algo = LevelOnePruningAlgo(1)
+    algo = DeMatosPruningAlgo(1)
     pruner = CutPruner{2, Int}(algo, :Min)
     addcuts!(pruner, [1 0], [0], [true])
     CutPruners.updatestats!(pruner, [1 0])
