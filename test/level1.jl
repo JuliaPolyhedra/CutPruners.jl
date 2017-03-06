@@ -38,3 +38,19 @@ end
     @test A == [2 0]
     @test b == [0]
 end
+
+@testset "Manual Cut Pruning" begin
+    algo = LevelOnePruningAlgo(10)
+    pruner = CutPruner{2, Int}(algo, :Max)
+    addcuts!(pruner, [1 0], [0], [true])
+    addcuts!(pruner, [2 0], [0], [true])
+    CutPruners.updatestats!(pruner, [1 0])
+
+    @test ncuts(pruner) == 2
+    prunecuts!(pruner)
+    @test ncuts(pruner) == 1
+    # The cut [2 0] is taken even if [1 0] has one territory
+    A, b = fetchcuts(pruner)
+    @test A == [2 0]
+    @test b == [0]
+end

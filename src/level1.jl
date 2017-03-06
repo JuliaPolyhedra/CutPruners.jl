@@ -237,7 +237,9 @@ function appendcuts!{N, T}(man::LevelOneCutPruner{N, T}, A, b, mycut::AbstractVe
 end
 
 
-function fetchcuts(man::LevelOneCutPruner)
-    K =  man.trust .> 0
-    return man.A[K, :], man.b[K]
+"""Remove dominated cuts in CutPruner `man`."""
+function prunecuts!(man::LevelOneCutPruner)
+    K =  (1:ncuts(man))[man.trust .== 0]
+    removecuts!(man, K)
+    return K
 end

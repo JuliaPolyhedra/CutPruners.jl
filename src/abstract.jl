@@ -6,7 +6,7 @@ export CutPruner, AbstractCutPruner
 # High-level functions
 export addcuts!, ncuts
 # Low-level functions
-export appendcuts!, replacecuts!, keeponlycuts!, removecuts!, fetchcuts
+export appendcuts!, replacecuts!, keeponlycuts!, removecuts!, fetchcuts, prunecuts!
 
 abstract AbstractCutPruningAlgo
 
@@ -292,7 +292,7 @@ function appendcuts!(man::AbstractCutPruner, A, b, mycut::AbstractVector{Bool})
 end
 
 """Return cuts currently stored inside CutPruner `man`."""
-fetchcuts(man::AbstractCutPruner) = (man.A, man.b)
+fetchcuts(man::AbstractCutPruner) = man.A, man.b
 
 
 # Unexported utilities
@@ -358,4 +358,9 @@ function isinside{T}(A::AbstractMatrix{T}, b::AbstractVector{T}, λ::AbstractVec
         check = norm(a - λ, Inf) < tol
     end
     check, k
+end
+
+"""Remove non-dominant cuts in CutPruner `man`."""
+function prunecuts!(man::AbstractCutPruner)
+    (1:ncuts(man))
 end
