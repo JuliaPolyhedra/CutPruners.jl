@@ -9,6 +9,9 @@ module CutPruners
 
 using DocStringExtensions
 
+# Redudancy checking
+include("redund.jl")
+
 include("abstract.jl")
 include("avg.jl")
 include("decay.jl")
