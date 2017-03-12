@@ -244,7 +244,14 @@ function addcuts!{N, T}(man::AbstractCutPruner{N, T},
         end
     end
 
-    status
+    if isempty(redundants)
+        fullstatus = status
+    else
+        fullstatus = Array{Int}(nnew + length(redundants))
+        fullstatus[tokeep] = status
+        fullstatus[redundants] = 0
+    end
+    fullstatus
 end
 
 # Low-level functions
