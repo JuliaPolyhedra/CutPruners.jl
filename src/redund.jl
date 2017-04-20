@@ -17,7 +17,7 @@ $(SIGNATURES)
 """
 function checkredundancy{T}(A::AbstractMatrix{T}, b::AbstractVector{T},
                             Anew::AbstractMatrix{T}, bnew::AbstractVector{T},
-                            isfun::Bool, islb::Bool, tol::Float64)
+                            isfun::Bool, islb::Bool, tol::Float64, ident::Bool=false)
     # index of redundants cuts
     redundants = Int[]
     # number of new lines
@@ -26,7 +26,7 @@ function checkredundancy{T}(A::AbstractMatrix{T}, b::AbstractVector{T},
     for kk in 1:nnew
         a, β = normalizedcut(Anew, bnew, kk, isfun, tol)
         chk, indk = isinside(A, b, a, isfun, tol)
-        if chk
+        if chk && (~ident || indk!=kk)
             ared, βred = normalizedcut(A, b, indk, isfun, tol)
             if islb ? β <= βred+tol : β+tol >= βred
                 push!(redundants, kk)
@@ -47,7 +47,24 @@ function isinside{T}(A::AbstractMatrix{T}, b::AbstractVector{T}, λ::AbstractVec
     while ~check && k < nlines
         k += 1
         a, β = normalizedcut(A, b, k, isfun, tol)
-        check = norm(a - λ, Inf) < tol
+        check = (norm(a - λ, Inf) < tol)
     end
     check, k
 end
+
+
+checkredundancy(A, b, isfun, islb, tol)=checkredundancy(A, b, A, b, isfun, islb, tol, true)
+
+
+"""Remove redundants cuts in polyhedra (A, b)."""
+function clean!(A, b, isfun, islb, tol)
+    nincumbents = size(A, 1)
+    redundants = checkredundancy(A, b, isfun, islb, tol)
+    if !isempty(redundants) && length(redundants) < nincumbents
+        tokeep = setdiff(collect(1:nincumbents), redundants)
+
+        A = A[tokeep, :]
+        b = b[tokeep]
+    end
+end
+

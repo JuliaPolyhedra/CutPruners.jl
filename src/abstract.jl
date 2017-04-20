@@ -152,6 +152,7 @@ function addcuts!{N, T}(man::AbstractCutPruner{N, T},
     nincumbents = size(A, 1)
 
     # check redundancy
+    clean!(A, b, man.isfun, man.islb, man.TOL_EPS)
     redundants = checkredundancy(man.A, man.b, A, b, man.isfun, man.islb, man.TOL_EPS)
     if !isempty(redundants)
         tokeep = setdiff(collect(1:nincumbents), redundants)
