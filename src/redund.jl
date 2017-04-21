@@ -10,9 +10,21 @@ function normalizedcut{T}(A::AbstractMatrix{T}, b::AbstractVector{T}, k::Int, is
 end
 
 """
-Check redundant cuts. Return index of redundant cuts in `Anew`.
+Check redundant cuts between the Polyhedra (A,b) and (Anew, bnew).
+Return index of redundant cuts in `Anew`.
 
 $(SIGNATURES)
+
+# Arguments
+* `isfun::Bool`
+    States if the Polyhedra defines a function
+* `islb::Bool`
+    States if the Polyhedra is a lower-bound or an upper-bound
+* `tol::Float64`
+    Tolerance of redundancy check
+* `ident::Bool`
+    States whether (A,b)==(Anew,bnew) if we want to remove redundant
+    lines in a single Polyhedra
 
 """
 function checkredundancy{T}(A::AbstractMatrix{T}, b::AbstractVector{T},
@@ -26,6 +38,8 @@ function checkredundancy{T}(A::AbstractMatrix{T}, b::AbstractVector{T},
     for kk in 1:nnew
         a, β = normalizedcut(Anew, bnew, kk, isfun, tol)
         chk, indk = isinside(A, b, a, isfun, tol)
+        # if ident is true, we need to take care of the possible match
+        # of the cut a with itself in the matrix Anew
         if chk && (~ident || indk!=kk)
             ared, βred = normalizedcut(A, b, indk, isfun, tol)
             if islb ? β <= βred+tol : β+tol >= βred
@@ -38,8 +52,10 @@ function checkredundancy{T}(A::AbstractMatrix{T}, b::AbstractVector{T},
 end
 
 
-"""Check if `λ` is a line of matrix `A`. `λ` might not have the same `eltype` as `A` and `b` as it might have been scaled by `normalizecut`."""
-function isinside{T}(A::AbstractMatrix{T}, b::AbstractVector{T}, λ::AbstractVector, isfun::Bool, tol::Float64)
+"""Check if `λ` is a line of matrix `A`. `λ` might not have the same `eltype`
+as `A` and `b` as it might have been scaled by `normalizecut`."""
+function isinside{T}(A::AbstractMatrix{T}, b::AbstractVector{T},
+                     λ::AbstractVector, isfun::Bool, tol::Float64)
     nlines = size(A, 1)
 
     check = false
@@ -57,7 +73,8 @@ checkredundancy(A, b, isfun, islb, tol)=checkredundancy(A, b, A, b, isfun, islb,
 
 
 """Remove redundants cuts in polyhedra (A, b)."""
-function clean!(A, b, isfun, islb, tol)
+function clean!{T}(A::AbstractMatrix{T}, b::AbstractVector{T},
+                   isfun::Bool, islb::Bool, tol::Float64)
     nincumbents = size(A, 1)
     redundants = checkredundancy(A, b, isfun, islb, tol)
     if !isempty(redundants) && length(redundants) < nincumbents

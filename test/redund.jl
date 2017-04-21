@@ -21,4 +21,5 @@ end
     @test CutPruners.checkredundancy(A, a, true, false, 1e-6) == Int[4]
     # A and B will be renormalized so A would be very close to B and even 1e-16 works
     @test CutPruners.checkredundancy(A, a, false, true, 1e-16) == Int[4]
+    @test CutPruners.checkredundancy(A, a, false, false, 1e-6) == [2, 4]
 end
