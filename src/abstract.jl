@@ -153,17 +153,23 @@ function addcuts!{N, T}(man::AbstractCutPruner{N, T},
 
     # check redundancy
     clean!(A, b, man.isfun, man.islb, man.TOL_EPS)
-    redundants = checkredundancy(man.A, man.b, A, b, man.isfun, man.islb, man.TOL_EPS)
-    if !isempty(redundants)
-        tokeep = setdiff(collect(1:nincumbents), redundants)
 
-        # if all cuts are redundants, then do nothing:
-        if length(tokeep) == 0
-            return zeros(Int, nincumbents)
+    # if specify, check if new cuts are redundants with old cuts
+    if man.excheck
+        redundants = checkredundancy(man.A, man.b, A, b, man.isfun, man.islb, man.TOL_EPS)
+        if !isempty(redundants)
+            tokeep = setdiff(collect(1:nincumbents), redundants)
+
+            # if all cuts are redundants, then do nothing:
+            if length(tokeep) == 0
+                return zeros(Int, nincumbents)
+            end
+            A = A[tokeep, :]
+            b = b[tokeep]
+            mycut = mycut[tokeep]
         end
-        A = A[tokeep, :]
-        b = b[tokeep]
-        mycut = mycut[tokeep]
+    else
+        redundants = Int[]
     end
 
     # get number of new cuts in A:

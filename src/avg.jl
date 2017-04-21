@@ -41,12 +41,15 @@ type AvgCutPruner{N, T} <: AbstractCutPruner{N, T}
     newcuttrust::Float64
     mycutbonus::Float64
 
+    # check redundancy with old cuts when adding new cuts
+    excheck::Bool
+
     # tolerance to check redundancy between two cuts
     TOL_EPS::Float64
 
     function AvgCutPruner(sense::Symbol, maxncuts::Int, newcuttrust=3/4, mycutbonus=1/4; tol=1e-6)
         isfun, islb = gettype(sense)
-        new(isfun, islb, spzeros(T, 0, N), T[], maxncuts, Int[], Int[], Bool[], nothing, Int[], 0, newcuttrust, mycutbonus, tol)
+        new(isfun, islb, spzeros(T, 0, N), T[], maxncuts, Int[], Int[], Bool[], nothing, Int[], 0, newcuttrust, mycutbonus, true, tol)
     end
 end
 
