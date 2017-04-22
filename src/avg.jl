@@ -23,6 +23,7 @@ type AvgCutPruner{N, T} <: AbstractCutPruner{N, T}
     # used to generate cuts
     isfun::Bool
     islb::Bool
+    lazy_minus::Bool
     A::AbstractMatrix{T}
     b::AbstractVector{T}
 
@@ -44,13 +45,13 @@ type AvgCutPruner{N, T} <: AbstractCutPruner{N, T}
     # tolerance to check redundancy between two cuts
     TOL_EPS::Float64
 
-    function AvgCutPruner(sense::Symbol, maxncuts::Int, newcuttrust=3/4, mycutbonus=1/4; tol=1e-6)
+    function AvgCutPruner(sense::Symbol, maxncuts::Int, newcuttrust=3/4, mycutbonus=1/4, lazy_minus::Bool=false, tol=1e-6)
         isfun, islb = gettype(sense)
-        new(isfun, islb, spzeros(T, 0, N), T[], maxncuts, Int[], Int[], Bool[], nothing, Int[], 0, newcuttrust, mycutbonus, tol)
+        new(isfun, islb, lazy_minus, spzeros(T, 0, N), T[], maxncuts, Int[], Int[], Bool[], nothing, Int[], 0, newcuttrust, mycutbonus, tol)
     end
 end
 
-(::Type{CutPruner{N, T}}){N, T}(algo::AvgCutPruningAlgo, sense::Symbol) = AvgCutPruner{N, T}(sense, algo.maxncuts, algo.newcuttrust, algo.mycutbonus)
+(::Type{CutPruner{N, T}}){N, T}(algo::AvgCutPruningAlgo, sense::Symbol, lazy_minus::Bool=false) = AvgCutPruner{N, T}(sense, algo.maxncuts, algo.newcuttrust, algo.mycutbonus, lazy_minus)
 
 # COMPARISON
 """Update cuts relevantness after a solver's call returning dual vector `σρ`."""
