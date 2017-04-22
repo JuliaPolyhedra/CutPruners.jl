@@ -23,6 +23,7 @@ type DeMatosCutPruner{N, T} <: AbstractCutPruner{N, T}
     # used to generate cuts
     isfun::Bool
     islb::Bool
+    lazy_minus::Bool
     A::AbstractMatrix{T}
     b::AbstractVector{T}
 
@@ -40,13 +41,13 @@ type DeMatosCutPruner{N, T} <: AbstractCutPruner{N, T}
     # tolerance to check redundancy between two cuts
     TOL_EPS::Float64
 
-    function DeMatosCutPruner(sense::Symbol, maxncuts::Int, tol=1e-6)
+    function DeMatosCutPruner(sense::Symbol, maxncuts::Int, lazy_minus::Bool=false, tol=1e-6)
         isfun, islb = gettype(sense)
-        new(isfun, islb, spzeros(T, 0, N), T[], maxncuts, Tuple{Int64, T}[], Int[], 0, [], 0, zeros(T, 0, N), tol)
+        new(isfun, islb, lazy_minus, spzeros(T, 0, N), T[], maxncuts, Tuple{Int64, T}[], Int[], 0, [], 0, zeros(T, 0, N), tol)
     end
 end
 
-(::Type{CutPruner{N, T}}){N, T}(algo::DeMatosPruningAlgo, sense::Symbol) = DeMatosCutPruner{N, T}(sense, algo.maxncuts)
+(::Type{CutPruner{N, T}}){N, T}(algo::DeMatosPruningAlgo, sense::Symbol, lazy_minus::Bool=false) = DeMatosCutPruner{N, T}(sense, algo.maxncuts, lazy_minus)
 
 getnreplaced(man::DeMatosCutPruner, R, ncur, nnew, mycut) = nnew, length(R)
 
@@ -181,6 +182,9 @@ function cutvalue{T}(man::DeMatosCutPruner, indc::Int, x::Vector{T})
     β = man.b[indc]
     a = @view man.A[indc, :]
     ax = dot(a, x)
+    if man.lazy_minus
+        ax = -ax
+    end
     cost = isfun(man) ? ax + β : (β - ax) / norm(a, 2)
     islb(man) ? cost : -cost
 end
