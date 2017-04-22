@@ -43,9 +43,9 @@ type DeMatosCutPruner{N, T} <: AbstractCutPruner{N, T}
     # tolerance to check redundancy between two cuts
     TOL_EPS::Float64
 
-    function DeMatosCutPruner(sense::Symbol, maxncuts::Int, tol=1e-6)
+    function DeMatosCutPruner(sense::Symbol, maxncuts::Int, tol=1e-6, excheck::Bool=false)
         isfun, islb = gettype(sense)
-        new(isfun, islb, spzeros(T, 0, N), T[], maxncuts, Tuple{Int64, T}[], Int[], 0, [], 0, zeros(T, 0, N), false, tol)
+        new(isfun, islb, spzeros(T, 0, N), T[], maxncuts, Tuple{Int64, T}[], Int[], 0, [], 0, zeros(T, 0, N), excheck, tol)
     end
 end
 

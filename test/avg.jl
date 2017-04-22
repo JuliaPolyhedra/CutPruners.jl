@@ -1,6 +1,9 @@
 @testset "Avg cut pruning" begin
     algo = AvgCutPruningAlgo(2)
     pruner = CutPruner{2, Int}(algo, :≤)
+    # check redundancy between new and old cuts
+    pruner.excheck = true
+
     @test 1:1 == addcuts!(pruner, [1 0], [1], [true])
     @test 2:2 == addcuts!(pruner, [0 1], [1], [true])
     CutPruners.updatestats!(pruner, [1, 0])

@@ -70,18 +70,3 @@ end
 
 
 checkredundancy(A, b, isfun, islb, tol)=checkredundancy(A, b, A, b, isfun, islb, tol, true)
-
-
-"""Remove redundants cuts in polyhedra (A, b)."""
-function clean!{T}(A::AbstractMatrix{T}, b::AbstractVector{T},
-                   isfun::Bool, islb::Bool, tol::Float64)
-    nincumbents = size(A, 1)
-    redundants = checkredundancy(A, b, isfun, islb, tol)
-    if !isempty(redundants) && length(redundants) < nincumbents
-        tokeep = setdiff(collect(1:nincumbents), redundants)
-
-        A = A[tokeep, :]
-        b = b[tokeep]
-    end
-end
-

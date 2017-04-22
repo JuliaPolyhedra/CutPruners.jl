@@ -19,7 +19,11 @@ for algo in [AvgCutPruningAlgo(3), DecayCutPruningAlgo(3)]
         addcuts!(pruner, [1 0], [0], [true])
         # add redundants cuts: this cut will not be added to pruner
         addcuts!(pruner, [1 0], [0], [true])
-        @test ncuts(pruner) == 1
+        @test ncuts(pruner) == 2
+
+        # add redundants cuts: the last cut will not be added to pruner
+        addcuts!(pruner, [1 1; 1 1], [0, 0], [true, true])
+        @test ncuts(pruner) == 3
 
         addcuts!(pruner, [2 0], [0], [true])
         addcuts!(pruner, [3 0], [0], [true])
