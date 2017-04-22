@@ -146,20 +146,40 @@ function addcuts!{N, T}(man::AbstractCutPruner{N, T},
                      mycut::AbstractVector{Bool})
     # get current number of cuts:
     ncur = ncuts(man)
+    ncutinitial = size(A, 1)
+
+    # First pass: remove redundancy among new cuts
+    # check redundancy among new cuts (require more than one cut in Anew)
+    redundant1 = checkredundancy(A, b, man.isfun, man.islb, man.TOL_EPS)
+    tokeep1 = setdiff(collect(1:ncutinitial), redundant1)
+    if length(tokeep1) < size(A, 1)
+        A = A[tokeep1, :]
+        b = b[tokeep1]
+        mycut = mycut[tokeep1]
+    end
+
+    # Second pass: remove redundancy between old and new cuts
+    # if specify, check if new cuts are redundants with old cuts
     nincumbents = size(A, 1)
+    if man.excheck
+        redundants2 = checkredundancy(man.A, man.b, A, b, man.isfun, man.islb, man.TOL_EPS)
+        tokeep2 = setdiff(collect(1:nincumbents), redundants2)
+        if !isempty(redundants2)
 
-    # check redundancy
-    redundants = checkredundancy(man.A, man.b, A, b, man.isfun, man.islb, man.TOL_EPS)
-    if !isempty(redundants)
-        tokeep = setdiff(collect(1:nincumbents), redundants)
-
-        # if all cuts are redundants, then do nothing:
-        if length(tokeep) == 0
-            return zeros(Int, nincumbents)
+            # if all cuts are redundants, then do nothing:
+            if length(tokeep2) == 0
+                return zeros(Int, nincumbents)
+            end
+            A = A[tokeep2, :]
+            b = b[tokeep2]
+            mycut = mycut[tokeep2]
         end
-        A = A[tokeep, :]
-        b = b[tokeep]
-        mycut = mycut[tokeep]
+
+        redundants = vcat(redundant1, tokeep1[redundants2])
+        tokeep = tokeep1[tokeep2]
+    else
+        redundants = redundant1
+        tokeep = tokeep1
     end
 
     # get number of new cuts in A:

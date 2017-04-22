@@ -38,12 +38,16 @@ type DeMatosCutPruner{N, T} <: AbstractCutPruner{N, T}
     nstates::Int
     states::Array{T, 2}
 
+    # peform exhaustive check before adding cuts
+    excheck::Bool
+
     # tolerance to check redundancy between two cuts
     TOL_EPS::Float64
 
-    function DeMatosCutPruner(sense::Symbol, maxncuts::Int, lazy_minus::Bool=false, tol=1e-6)
+
+    function DeMatosCutPruner(sense::Symbol, maxncuts::Int, lazy_minus::Bool=false, tol=1e-6, excheck::Bool=false)
         isfun, islb = gettype(sense)
-        new(isfun, islb, lazy_minus, spzeros(T, 0, N), T[], maxncuts, Tuple{Int64, T}[], Int[], 0, [], 0, zeros(T, 0, N), tol)
+        new(isfun, islb, lazy_minus, spzeros(T, 0, N), T[], maxncuts, Tuple{Int64, T}[], Int[], 0, [], 0, zeros(T, 0, N), excheck, tol)
     end
 end
 
