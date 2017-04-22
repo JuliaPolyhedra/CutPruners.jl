@@ -25,6 +25,7 @@ type DecayCutPruner{N, T} <: AbstractCutPruner{N, T}
     # used to generate cuts
     isfun::Bool
     islb::Bool
+    lazy_minus::Bool
     A::AbstractMatrix{T}
     b::AbstractVector{T}
 
@@ -44,14 +45,15 @@ type DecayCutPruner{N, T} <: AbstractCutPruner{N, T}
     # tolerance to check redundancy between two cuts
     TOL_EPS::Float64
 
+
     function DecayCutPruner(sense::Symbol, maxncuts::Int, λ=0.9,
-                            newcuttrust=0.8, mycutbonus=1, tol=1e-6, excheck::Bool=false)#newcuttrust=(1/(1/0.9-1))/2, mycutbonus=(1/(1/0.9-1))/2)
+                            newcuttrust=0.8, mycutbonus=1, lazy_minus::Bool=false, tol=1e-6, excheck::Bool=false)#newcuttrust=(1/(1/0.9-1))/2, mycutbonus=(1/(1/0.9-1))/2)
         isfun, islb = gettype(sense)
-        new(isfun, islb, spzeros(T, 0, N), T[], maxncuts, Float64[], Int[], 0, λ, newcuttrust, mycutbonus, excheck, tol)
+        new(isfun, islb, lazy_minus, spzeros(T, 0, N), T[], maxncuts, Float64[], Int[], 0, λ, newcuttrust, mycutbonus, excheck, tol)
     end
 end
 
-(::Type{CutPruner{N, T}}){N, T}(algo::DecayCutPruningAlgo, sense::Symbol) = DecayCutPruner{N, T}(sense, algo.maxncuts, algo.λ, algo.newcuttrust, algo.mycutbonus)
+(::Type{CutPruner{N, T}}){N, T}(algo::DecayCutPruningAlgo, sense::Symbol, lazy_minus::Bool=false) = DecayCutPruner{N, T}(sense, algo.maxncuts, algo.λ, algo.newcuttrust, algo.mycutbonus, lazy_minus)
 
 # COMPARISON
 

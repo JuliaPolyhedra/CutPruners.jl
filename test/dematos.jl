@@ -25,6 +25,18 @@ using Base.Test
     @test pruner.trust == [0, 3.0, 0]
 end
 
+@testset "Lazy Minus" begin
+    algo = DeMatosPruningAlgo(2)
+    pruner = CutPruner{2, Int}(algo, :Max, true)
+    addcuts!(pruner, [1 0], [0], [true])
+    addcuts!(pruner, [2 0], [0], [true])
+    CutPruners.updatestats!(pruner, [1 0])
+    @test pruner.trust == [1., 0.]
+    addcuts!(pruner, [-1 0], [0], [true])
+    @test pruner.trust == [0., 1.]
+    @test pruner.A == [1 0; -1 0]
+end
+
 @testset "Priority to new cuts" begin
     algo = DeMatosPruningAlgo(1)
     pruner = CutPruner{2, Int}(algo, :Min)

@@ -13,10 +13,7 @@ abstract AbstractCutPruningAlgo
 """
 A cut pruner maintains a matrix `A` and a vector `b` such that
 represents `size(A, 1)` (` == length(b)`) cuts.
-Let `a_i` be `A[i,:]` and `β_i` be `b[i]`, the meaning of the cut depends on the sense.
-Cuts (A, b) defines the half-space satisfying:
-Ax >= b if islb
-Ax <= b otherwise
+Let `a_i` be `-A[i,:]` if `lazy_minus` and `A[i,:]` otherwise and `β_i` be `b[i]`, the meaning of the cut depends on the sense.
 If `sense` is
 * `:Min`, then the cut pruner represents the concave polyhedral function `min ⟨a_i, x⟩ + β_i`;
 * `:Max`, then the cut pruner represents the convex polyhedral function `max ⟨a_i, x⟩ + β_i`;
