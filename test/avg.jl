@@ -4,6 +4,7 @@
     # check redundancy between new and old cuts
     pruner.excheck = true
 
+    addposition!(pruner, [1, 0])
     @test 1:1 == addcuts!(pruner, [1 0], [1], [true])
     @test 2:2 == addcuts!(pruner, [0 1], [1], [true])
     addusage!(pruner, [1, 0])

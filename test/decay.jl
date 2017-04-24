@@ -2,6 +2,7 @@
     algo = DecayCutPruningAlgo(2)
     pruner = CutPruner{2, Int}(algo, :≤)
     @test 1:1 == addcuts!(pruner, [1 0], [2], [true])
+    addposition!(pruner, [1, 0])
     @test [1, 2] == addcuts!(pruner, [1 0; 0 1], [1, 2], [true, true])
     @test pruner.A == [1 0; 0 1]
     @test pruner.b == [1, 2]

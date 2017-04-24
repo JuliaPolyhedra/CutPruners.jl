@@ -8,6 +8,7 @@ using Base.Test
     addcuts!(pruner, [1 0], [0], [true])
     addcuts!(pruner, [2 0], [0], [true])
     addcuts!(pruner, [3 0], [0], [true])
+    addusage!(pruner, [1 0])
     # FIXME: need to update stats before reaching the ncuts limit ...
     addposition!(pruner, [1 0])
     @test pruner.trust == [0, 0, 2.0]
