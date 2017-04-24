@@ -57,7 +57,7 @@ end
 
 # COMPARISON
 
-function updatestats!(man::DecayCutPruner, σρ)
+function addusage!(man::DecayCutPruner, σρ)
     if ncuts(man) > 0
         man.trust *= man.λ
         man.trust[σρ .> 1e-6] += 1

@@ -59,7 +59,7 @@ end
 
 # COMPARISON
 """Update cuts relevantness after a solver's call returning dual vector `σρ`."""
-function updatestats!(man::AvgCutPruner, σρ)
+function addusage!(man::AvgCutPruner, σρ)
     if ncuts(man) > 0
         man.nwith += 1
         # TODO: dry 1e-6 in CutPruner?

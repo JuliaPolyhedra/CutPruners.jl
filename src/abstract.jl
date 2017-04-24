@@ -315,6 +315,15 @@ function appendcuts!(man::AbstractCutPruner, A, b, mycut::AbstractVector{Bool})
     append!(man.trust, initialtrusts(man, mycut))
 end
 
+# Update trust
+export addusage!, addposition!
+function addusage!(pruner::AbstractCutPruner, position)
+    # do nothing by default
+end
+function addposition!(pruner::AbstractCutPruner, position)
+    # do nothing by default
+end
+
 # Unexported utilities
 
 function newids(man::AbstractCutPruner, n::Int)

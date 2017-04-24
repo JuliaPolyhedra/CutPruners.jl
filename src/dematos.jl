@@ -64,7 +64,7 @@ $(SIGNATURES)
 * `position::Array{T, 2}`
     New visited positions
 """
-function updatestats!{T}(man::DeMatosCutPruner, position::Array{T, 2})
+function addposition!(man::DeMatosCutPruner, position::Matrix)
     # get number of new positions to analyse:
     nx = size(position, 1)
 
