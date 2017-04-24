@@ -6,7 +6,7 @@
 
     addposition!(pruner, [1, 0])
     @test 1:1 == addcuts!(pruner, [1 0], [1], [true])
-    @test 2:2 == addcuts!(pruner, [0 1], [1], [true])
+    @test 2:2 == addcuts!(pruner, [0 1], [1], [false])
     addusage!(pruner, [1, 0])
     @test [2, 0, 0] == addcuts!(pruner, [1 1; -1 -1; 0 1], [1, 1, 2], [true, false, true])
     @test pruner.A == [1 0; 1 1]
