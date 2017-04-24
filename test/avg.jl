@@ -16,4 +16,6 @@
     @test pruner.A == [1 0; 1 1]
     @test pruner.b == [1, 1]
     @test pruner.ids == [1, 3]
+    addusage!(pruner, [1, 0])
+    @test [2, 0] == addcuts!(pruner, [2 0; 0 2], [0, 0], [false, false])
 end
