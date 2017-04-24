@@ -34,9 +34,9 @@ type DeMatosCutPruner{N, T} <: AbstractCutPruner{N, T}
     id::Int # current id
 
     #set of states where cut k is active
-    territories::Vector{Vector{Tuple{Int64, T}}}
+    territories::Vector{Vector{Tuple{Int, T}}}
     nstates::Int
-    states::Array{T, 2}
+    states::Matrix{T}
 
     # peform exhaustive check before adding cuts
     excheck::Bool
@@ -47,7 +47,7 @@ type DeMatosCutPruner{N, T} <: AbstractCutPruner{N, T}
 
     function DeMatosCutPruner(sense::Symbol, maxncuts::Int, lazy_minus::Bool=false, tol=1e-6, excheck::Bool=false)
         isfun, islb = gettype(sense)
-        new(isfun, islb, lazy_minus, spzeros(T, 0, N), T[], maxncuts, Tuple{Int64, T}[], Int[], 0, [], 0, zeros(T, 0, N), excheck, tol)
+        new(isfun, islb, lazy_minus, spzeros(T, 0, N), T[], maxncuts, Tuple{Int, T}[], Int[], 0, [], 0, zeros(T, 0, N), excheck, tol)
     end
 end
 
@@ -75,6 +75,11 @@ function addposition!(man::DeMatosCutPruner, position::Matrix)
     updatetrust!(man)
 end
 
+function addposition!(man::DeMatosCutPruner, position::Vector)
+    addstate!(man, position)
+    updatetrust!(man)
+end
+
 
 """Add a new state to test and accordingly update territories of each cut.
 
@@ -91,10 +96,12 @@ function addstate!(man::DeMatosCutPruner, x::Vector)
 end
 
 function giveterritory!(man::DeMatosCutPruner, ix::Int, x::Vector=man.states[ix, :])
-    # Get cut which is active at point `x`:
-    bcost, bcuts = optimalcut(man, x)
-    # Add `x` with index nstates  to the territory of cut with index `bcuts`:
-    push!(man.territories[bcuts], (ix, bcost))
+    if ncuts(man) > 0
+        # Get cut which is active at point `x`:
+        bcost, bcuts = optimalcut(man, x)
+        # Add `x` with index nstates  to the territory of cut with index `bcuts`:
+        push!(man.territories[bcuts], (ix, bcost))
+    end
 end
 
 """Find active cut at point `xf`.
@@ -109,7 +116,7 @@ $(SIGNATURES)
 # Return
 `bestcost::Float64`
     Value of supporting cut at point `xf`
-`bestcut::Int64`
+`bestcut::Int`
     Index of supporting cut at point `xf`
 """
 function optimalcut{T}(man::DeMatosCutPruner,
@@ -137,10 +144,10 @@ $(SIGNATURES)
 
 # Arguments
 * `man::DeMatosCutPruner`:
-* `indcut::Int64`:
+* `indcut::Int`:
     new cut index
 """
-function updateterritory!(man::DeMatosCutPruner, indcut::Int64)
+function updateterritory!(man::DeMatosCutPruner, indcut::Int)
     @assert length(man.territories) == ncuts(man)
     for k in 1:ncuts(man)
         if k == indcut
@@ -215,7 +222,7 @@ function replacecuts!{N, T}(man::DeMatosCutPruner{N, T}, K::AbstractVector{Int},
     # Do not do view here since will will modify the entries
     freeterritories = man.territories[K]
     for k in K
-        man.territories[k] = Tuple{Int64, T}[]
+        man.territories[k] = Tuple{Int, T}[]
     end
     for k in K
         updateterritory!(man, k)
@@ -236,9 +243,18 @@ function appendcuts!{N, T}(man::DeMatosCutPruner{N, T}, A, b, mycut::AbstractVec
     oldncuts = ncuts(man)
     _appendcuts!(man, A, b)
     nnew = length(b)
-    man.territories = vcat(man.territories, [Tuple{Int64, T}[] for _ in 1:nnew])
-    for k in oldncuts+(1:nnew)
-        updateterritory!(man, k)
+    newterritories = [Tuple{Int, T}[] for _ in 1:nnew]
+    if isempty(man.territories)
+        man.territories = newterritories
+        # No cut yet, we share territories among new cuts
+        for i in 1:size(man.states, 1)
+            giveterritory!(man, i)
+        end
+    else
+        man.territories = vcat(man.territories, newterritories)
+        for k in oldncuts+(1:nnew)
+            updateterritory!(man, k)
+        end
     end
     updatetrust!(man)
     @assert length(man.territories) == ncuts(man)
