@@ -7,6 +7,7 @@ __precompile__()
 
 module CutPruners
 
+using Compat
 using DocStringExtensions
 
 # Redudancy checking
