@@ -8,6 +8,7 @@ __precompile__()
 module CutPruners
 
 using Compat
+using MathProgBase
 using DocStringExtensions
 
 # Redudancy checking
@@ -17,5 +18,6 @@ include("abstract.jl")
 include("avg.jl")
 include("decay.jl")
 include("dematos.jl")
+include("exact.jl")
 
 end # module
