@@ -71,6 +71,7 @@ end
 
 # COMPARISON
 hastrust(man::AbstractCutPruner) = true
+hasterritories(man::AbstractCutPruner) = false
 """Get current `trust` of CutPruner `man`."""
 gettrust(man::AbstractCutPruner) = man.trust
 
@@ -278,6 +279,9 @@ function _keeponlycuts!(man::AbstractCutPruner, K::AbstractVector{Int})
     man.ids = man.ids[K]
     if hastrust(man)
         man.trust = gettrust(man)[K]
+    end
+    if hasterritories(man)
+        man.territories = man.territories[K]
     end
 end
 
