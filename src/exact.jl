@@ -28,10 +28,10 @@ end
 """State whether a cut is dominated with a tolerance epsilon."""
 function isdominated(A, b, islb, isfun, k, solver, epsilon=1e-8)
     # we use MathProgBase to solve the test
-    # The LP is:
+    # For instance, if islb & isfun, the LP becomes:
     # min - y
     #     x ∈ R^n, y ∈ R
-    #     y <= (A[k, :] - A[j, :]) + b[k] - b[j]     ∀ i != k
+    #     y <= (A[k, :] - A[j, :])*x + b[k] - b[j]     ∀ i != k
 
     # we formulate an equivalent problem as
     # min c'*z
@@ -43,24 +43,33 @@ function isdominated(A, b, islb, isfun, k, solver, epsilon=1e-8)
     h = zeros(ncuts - 1)
     H = zeros(ncuts - 1, nx + 1)
     c = zeros(nx + 1)
-    c[1] = -1
+    c[1] = (islb)? -1 : 1
 
     λk = @view A[k, :]
 
     ic = 0
-    @inbounds for ix in 1:ncuts
+    for ix in 1:ncuts
         if ix != k
             ic += 1
-            h[ic] = b[k] - b[ix]
-            H[ic, 1] = 1
+            δb = b[k] - b[ix]
+            @inbounds h[ic] = ((isfun&islb) || (~isfun&~islb))? δb : -δb
+            @inbounds H[ic, 1] = (islb)? 1 : -1
 
-            @inbounds for jx in 1:nx
-                H[ic, jx+1] = A[ic, jx] - λk[jx]
+            for jx in 1:nx
+                dl = A[ic, jx] - λk[jx]
+                @inbounds H[ic, jx+1] = (islb)? dl : -dl
             end
         end
     end
 
     # solve the LP with MathProgBase
-    res = linprog(c, H, -Inf, h,  -Inf, Inf, solver).objval
-    return (-res < epsilon)
+    lb = -100
+    ub = 100
+    res = linprog(c, H, -Inf, h,  -ub, ub, solver)
+    if res.status == :Optimal
+        res = res.objval
+        return (islb)? -res < epsilon : res > -epsilon
+    else
+        return false
+    end
 end
