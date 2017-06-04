@@ -11,7 +11,7 @@ using Base.Test
                 addcuts!(pruner, [1 0], [i], [true])
             end
 
-            @time exactpruning!(pruner, ClpSolver())
+             exactpruning!(pruner, ClpSolver())
             # normally the exact pruning saves only the last cuts
             @test pruner.b == [10]
             # ... and add another set of cuts ...
@@ -19,9 +19,9 @@ using Base.Test
                 addcuts!(pruner, [2 0], [i+10], [true])
             end
 
-            @time exactpruning!(pruner, ClpSolver())
+             exactpruning!(pruner, ClpSolver())
             # perform the same test again
-            @test pruner.b == [20]
+            @test pruner.b == [10, 20]
         end
     end
     for algo in [AvgCutPruningAlgo(20), DecayCutPruningAlgo(20), DeMatosPruningAlgo(20)]
@@ -32,7 +32,7 @@ using Base.Test
                 addcuts!(pruner, [1 0], [i], [true])
             end
 
-            @time exactpruning!(pruner, ClpSolver())
+             exactpruning!(pruner, ClpSolver())
             # normally the exact pruning saves only the last cuts
             @test pruner.b == [1]
             # ... and add another set of cuts ...
@@ -40,7 +40,7 @@ using Base.Test
                 addcuts!(pruner, [2 0], [i+10], [true])
             end
 
-            @time exactpruning!(pruner, ClpSolver())
+             exactpruning!(pruner, ClpSolver())
             # perform the same test again
             @test pruner.b == [1, 11]
         end

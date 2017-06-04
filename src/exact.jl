@@ -26,7 +26,7 @@ function getdominated(A, b, islb, isfun, solver)
 end
 
 """State whether a cut is dominated with a tolerance epsilon."""
-function isdominated(A, b, islb, isfun, k, solver, epsilon=1e-8)
+function isdominated(A, b, islb, isfun, k, solver, epsilon=1e-5; ub=Inf, lb=-Inf)
     # we use MathProgBase to solve the test
     # For instance, if islb & isfun, the LP becomes:
     # min - y
@@ -56,16 +56,14 @@ function isdominated(A, b, islb, isfun, k, solver, epsilon=1e-8)
             @inbounds H[ic, 1] = (islb)? 1 : -1
 
             for jx in 1:nx
-                dl = A[ic, jx] - λk[jx]
+                dl = A[ix, jx] - λk[jx]
                 @inbounds H[ic, jx+1] = (islb)? dl : -dl
             end
         end
     end
 
     # solve the LP with MathProgBase
-    lb = -100
-    ub = 100
-    res = linprog(c, H, -Inf, h,  -ub, ub, solver)
+    res = linprog(c, H, -Inf, h, lb, ub, solver)
     if res.status == :Optimal
         res = res.objval
         return (islb)? -res < epsilon : res > -epsilon
