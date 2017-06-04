@@ -4,21 +4,35 @@ export exactpruning!
 # Exact pruning
 """Remove dominated cuts in CutPruner `man`.
 
+$(SIGNATURES)
+
 We use a LP solver to determine whether a cut is dominated or not.
+
+# Arguments
+* `man::AbstractCutPruner`
+    Cut pruner where to remove cuts
+* `solver`
+    Solver used to solve LP
+* `ub::Union{Float64, Vector{Float64}`
+    State x upper bound
+* `lb::Union{Float64, Vector{Float64}`
+    State x lower bound
+* `epsilon::Float64`
+    Pruning's tolerance
 """
-function exactpruning!(man::AbstractCutPruner, solver::MathProgBase.AbstractMathProgSolver)
-    K = getdominated(man.A, man.b, man.islb, man.isfun, solver)
+function exactpruning!(man::AbstractCutPruner, solver::MathProgBase.AbstractMathProgSolver; ub=Inf, lb=-Inf, epsilon=1e-5)
+    K = getdominated(man.A, man.b, man.islb, man.isfun, solver, lb, ub, epsilon)
     removecuts!(man, K)
 end
 
 """Return dominated cuts."""
-function getdominated(A, b, islb, isfun, solver)
+function getdominated(A, b, islb, isfun, solver, lb, ub, epsilon)
     red = Int[]
     if size(A, 1) == 1
         return red
     end
     for i in 1:size(A, 1)
-        if isdominated(A, b, islb, isfun, i, solver)
+        if isdominated(A, b, islb, isfun, i, solver, lb, ub, epsilon)
             push!(red, i)
         end
     end
@@ -26,7 +40,7 @@ function getdominated(A, b, islb, isfun, solver)
 end
 
 """State whether a cut is dominated with a tolerance epsilon."""
-function isdominated(A, b, islb, isfun, k, solver, epsilon=1e-5; ub=Inf, lb=-Inf)
+function isdominated(A, b, islb, isfun, k, solver, lb, ub, epsilon)
     # we use MathProgBase to solve the test
     # For instance, if islb & isfun, the LP becomes:
     # min - y
@@ -62,8 +76,12 @@ function isdominated(A, b, islb, isfun, k, solver, epsilon=1e-5; ub=Inf, lb=-Inf
         end
     end
 
+    # update lower and upper bound if Vector
+    lbx = isa(lb, Vector) ? vcat(-Inf, lb) : lb
+    ubx = isa(ub, Vector) ? vcat( Inf, ub) : ub
+
     # solve the LP with MathProgBase
-    res = linprog(c, H, -Inf, h, lb, ub, solver)
+    res = linprog(c, H, -Inf, h, lbx, ubx, solver)
     if res.status == :Optimal
         res = res.objval
         return (islb)? -res < epsilon : res > -epsilon
