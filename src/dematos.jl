@@ -45,9 +45,9 @@ type DeMatosCutPruner{N, T} <: AbstractCutPruner{N, T}
     TOL_EPS::Float64
 
 
-    function DeMatosCutPruner(sense::Symbol, maxncuts::Int, lazy_minus::Bool=false, tol=1e-6, excheck::Bool=false)
+    function (::Type{DeMatosCutPruner{N, T}}){N, T}(sense::Symbol, maxncuts::Int, lazy_minus::Bool=false, tol=1e-6, excheck::Bool=false)
         isfun, islb = gettype(sense)
-        new(isfun, islb, lazy_minus, spzeros(T, 0, N), T[], maxncuts, Tuple{Int, T}[], Int[], 0, [], 0, zeros(T, 0, N), excheck, tol)
+        new{N, T}(isfun, islb, lazy_minus, spzeros(T, 0, N), T[], maxncuts, Tuple{Int, T}[], Int[], 0, [], 0, zeros(T, 0, N), excheck, tol)
     end
 end
 
