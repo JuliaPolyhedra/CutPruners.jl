@@ -45,7 +45,7 @@ function isdominated(A, b, islb, isfun, k, solver, lb, ub, epsilon)
     # For instance, if islb & isfun, the LP becomes:
     # min - y
     #     x ∈ R^n, y ∈ R
-    #     y <= (A[k, :] - A[j, :])*x + b[k] - b[j]     ∀ i != k
+    #     y <= (A[k, :] - A[i, :])*x + b[k] - b[i]     ∀ i != k
 
     # we formulate an equivalent problem as
     # min c'*z
