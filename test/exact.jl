@@ -9,6 +9,11 @@ isempty(lp_solvers) && warn("Exact Pruning tests not run!")
         @testset "Exact pruning" begin
             pruner = CutPruner{2, Int}(algo, :Max)
             # add 10 cuts in a row
+            addcuts!(pruner, [1 0], [0], [true])
+            # test pruning with one cut
+            exactpruning!(pruner, solver)
+            @test pruner.b == [0]
+
             for i in 1:10
                 addcuts!(pruner, [1 0], [i], [true])
             end
