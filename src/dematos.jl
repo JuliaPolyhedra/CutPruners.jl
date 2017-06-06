@@ -55,6 +55,9 @@ end
 
 getnreplaced(man::DeMatosCutPruner, R, ncur, nnew, mycut) = nnew, length(R)
 
+hasterritories(man::DeMatosCutPruner) = true
+
+
 """Update territories with cuts previously computed during backward pass.
 
 $(SIGNATURES)
