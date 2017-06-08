@@ -16,7 +16,8 @@ xpr = try_import(:Xpress)
 mos = try_import(:Mosek)
 cbc = try_import(:Cbc)
 if cbc; import Clp; end
-glp = try_import(:GLPKMathProgInterface)
+import GLPKMathProgInterface
+glp = true
 ipt = try_import(:Ipopt)
 eco = try_import(:ECOS)
 
