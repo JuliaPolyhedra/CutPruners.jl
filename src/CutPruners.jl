@@ -7,7 +7,6 @@ __precompile__()
 
 module CutPruners
 
-using Compat
 using MathProgBase
 using DocStringExtensions
 
