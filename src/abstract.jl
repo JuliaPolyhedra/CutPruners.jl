@@ -8,7 +8,7 @@ export addcuts!, ncuts
 # Low-level functions
 export appendcuts!, replacecuts!, keeponlycuts!, removecuts!
 
-@compat abstract type AbstractCutPruningAlgo end
+abstract type AbstractCutPruningAlgo end
 
 """
 A cut pruner maintains a matrix `A` and a vector `b` such that
@@ -31,7 +31,7 @@ The mapping between `sense` and these two booleans is given by the following tab
 | ≥       | false   | true   |
 
 """
-@compat abstract type AbstractCutPruner{N, T} end
+abstract type AbstractCutPruner{N, T} end
 
 function gettype(sense::Symbol)
     if sense == :Min
