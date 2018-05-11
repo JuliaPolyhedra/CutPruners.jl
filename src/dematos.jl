@@ -1,6 +1,19 @@
 export DeMatosCutPruner, DeMatosPruningAlgo
 
 
+"""
+    DeMatosPruningAlgo <: AbstractCutPruningAlgo
+
+Removes the cuts with lower trust where the trust is the number
+of points `x` associated to the cuts.
+The more points are associated, the higher is the trust.
+
+We refer to [1] for further details.
+
+[1] De Matos, Vitor L., Andy B. Philpott, and Erlon C. Finardi.
+"Improving the performance of stochastic dual dynamic programming."
+Journal of Computational and Applied Mathematics 290 (2015): 196-208.
+"""
 struct DeMatosPruningAlgo <: AbstractCutPruningAlgo
     # maximum number of cuts
     maxncuts::Int
@@ -10,15 +23,6 @@ struct DeMatosPruningAlgo <: AbstractCutPruningAlgo
 end
 
 
-"""
-$(TYPEDEF)
-
-Removes the cuts with lower trust where the trust is: nused / nwith + bonus
-where the cut has been used `nused` times amoung `nwith` optimization done with it.
-We say that the cut was used if its dual value is nonzero.
-It has a bonus equal to `mycutbonus` if the cut was generated using a trial given by the problem using this cut.
-If `nwidth` is zero, `nused/nwith` is replaced by `newcuttrust`.
-"""
 mutable struct DeMatosCutPruner{N, T} <: AbstractCutPruner{N, T}
     # used to generate cuts
     isfun::Bool
@@ -58,14 +62,16 @@ getnreplaced(man::DeMatosCutPruner, R, ncur, nnew, mycut) = nnew, length(R)
 hasterritories(man::DeMatosCutPruner) = true
 
 
-"""Update territories with cuts previously computed during backward pass.
+"""
+    addposition!(man::DeMatosCutPruner, position::Matrix)
 
-$(SIGNATURES)
+Update territories with cuts previously computed during backward pass.
 
 # Arguments
 * `man::DeMatosCutPruner`
+    Pruner to update.
 * `position::Array{T, 2}`
-    New visited positions
+    New visited positions, corresponding to a collection of points.
 """
 function addposition!(man::DeMatosCutPruner, position::Matrix)
     # get number of new positions to analyse:
@@ -84,10 +90,10 @@ function addposition!(man::DeMatosCutPruner, position::Vector)
 end
 
 
-"""Add a new state to test and accordingly update territories of each cut.
+"""
+    addstate!(man::DeMatosCutPruner, x::Vector)
 
-$(SIGNATURES)
-
+Add a new state to test and accordingly update territories of each cut.
 """
 function addstate!(man::DeMatosCutPruner, x::Vector)
     # update number of states
@@ -107,19 +113,20 @@ function giveterritory!(man::DeMatosCutPruner, ix::Int, x::Vector=man.states[ix,
     end
 end
 
-"""Find active cut at point `xf`.
+"""
+    optimalcut{T}(man::DeMatosCutPruner, xf::Vector{T})
 
-$(SIGNATURES)
+Find active cut at point `xf`.
 
 # Arguments
 * `man::DeMatosCutPruner`:
     CutPruner
-* `xf::Vector{Float64}`:
+* `xf::Vector{T}`:
 
 # Return
-`bestcost::Float64`
+* `bestcost::T`
     Value of supporting cut at point `xf`
-`bestcut::Int`
+* `bestcut::Int`
     Index of supporting cut at point `xf`
 """
 function optimalcut{T}(man::DeMatosCutPruner,
@@ -140,10 +147,11 @@ function optimalcut{T}(man::DeMatosCutPruner,
 end
 
 
-"""Update territories (i.e. the set of tested states where
-    a given cut is active) considering new cut given by index `indcut`.
+"""
+    updateterritory!(man::DeMatosCutPruner, indcut::Int)
 
-$(SIGNATURES)
+Update territories (i.e. the set of tested states where
+    a given cut is active) considering new cut given by index `indcut`.
 
 # Arguments
 * `man::DeMatosCutPruner`:
@@ -173,20 +181,20 @@ end
 
 
 """
-Get value of cut with index `indc` at point `x`.
+    cutvalue{T}(man::DeMatosCutPruner, indc::Int, x::Vector{T})
 
-$(SIGNATURES)
+Get value of cut with index `indc` at point `x`.
 
 # Arguments
 - `man::DeMatosCutPruner`
     Approximation of the value function as linear cuts
 - `indc::Int`
     Index of cut to consider
-- `x::Vector`
+- `x::Vector{T}`
     Coordinates of state
 
 # Return
-`cost::Float64`
+`cost::T`
     Value of cut `indc` at point `x`.
     If `man` is a polyhedral function, then it is the value of the cut at `x`,
     otherwise, it is the distance between `x` and the cut.

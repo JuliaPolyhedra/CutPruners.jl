@@ -1,7 +1,7 @@
 export AvgCutPruningAlgo, AvgCutPruner
 
 """
-$(TYPEDEF)
+    AvgCutPruningAlgo <: AbstractCutPruningAlgo
 
 Removes the cuts with lower trust where the trust is: nused / nwith + bonus
 where the cut has been used `nused` times amoung `nwith` optimization done with it.

@@ -1,7 +1,7 @@
 export DecayCutPruningAlgo, DecayCutPruner
 
 """
-$(TYPEDEF)
+    DecayCutPruningAlgo <: AbstractCutPruningAlgo
 
 Removes the cuts with lower trust where the trust is initially
 `newcuttrust + bonus` and is updated using `trust -> λ * trust + used`

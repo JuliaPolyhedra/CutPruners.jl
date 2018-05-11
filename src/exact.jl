@@ -1,9 +1,12 @@
 export exactpruning!
 
 # Exact pruning
-"""Remove dominated cuts in CutPruner `man`.
+"""
+    exactpruning!(man::AbstractCutPruner, solver::MathProgBase.AbstractMathProgSolver;
+                  ub=Inf, lb=-Inf, epsilon=1e-5)
 
-$(SIGNATURES)
+
+Remove dominated cuts in CutPruner `man`.
 
 We use a LP solver to determine whether a cut is dominated or not.
 
@@ -12,9 +15,9 @@ We use a LP solver to determine whether a cut is dominated or not.
     Cut pruner where to remove cuts
 * `solver`
     Solver used to solve LP
-* `ub::Union{Float64, Vector{Float64}`
+* `ub::Union{Float64, Vector{Float64}}`
     State x upper bound
-* `lb::Union{Float64, Vector{Float64}`
+* `lb::Union{Float64, Vector{Float64}}`
     State x lower bound
 * `epsilon::Float64`
     Pruning's tolerance
