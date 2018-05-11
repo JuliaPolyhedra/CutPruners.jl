@@ -9,7 +9,7 @@ We say that the cut was used if its dual value is nonzero.
 It has a bonus equal to `mycutbonus` if the cut was generated using a trial given by the problem using this cut.
 If `nwidth` is zero, `nused/nwith` is replaced by `newcuttrust`.
 """
-type AvgCutPruningAlgo <: AbstractCutPruningAlgo
+struct AvgCutPruningAlgo <: AbstractCutPruningAlgo
     # maximum number of cuts
     maxncuts::Int
     newcuttrust::Float64
@@ -19,7 +19,7 @@ type AvgCutPruningAlgo <: AbstractCutPruningAlgo
     end
 end
 
-type AvgCutPruner{N, T} <: AbstractCutPruner{N, T}
+mutable struct AvgCutPruner{N, T} <: AbstractCutPruner{N, T}
     # used to generate cuts
     isfun::Bool
     islb::Bool
