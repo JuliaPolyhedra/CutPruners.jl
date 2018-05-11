@@ -8,7 +8,6 @@ __precompile__()
 module CutPruners
 
 using MathProgBase
-using DocStringExtensions
 
 # Redudancy checking
 include("redund.jl")

@@ -10,10 +10,12 @@ function normalizedcut{T}(A::AbstractMatrix{T}, b::AbstractVector{T}, k::Int, is
 end
 
 """
+    checkredundancy{T}(A::AbstractMatrix{T}, b::AbstractVector{T},
+                       Anew::AbstractMatrix{T}, bnew::AbstractVector{T},
+                       isfun::Bool, islb::Bool, tol::Float64, ident::Bool=false)
+
 Check redundant cuts between the Polyhedra (A,b) and (Anew, bnew).
 Return index of redundant cuts in `Anew`.
-
-$(SIGNATURES)
 
 # Arguments
 * `isfun::Bool`

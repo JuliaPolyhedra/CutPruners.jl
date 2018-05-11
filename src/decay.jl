@@ -1,7 +1,7 @@
 export DecayCutPruningAlgo, DecayCutPruner
 
 """
-$(TYPEDEF)
+    DecayCutPruningAlgo <: AbstractCutPruningAlgo
 
 Removes the cuts with lower trust where the trust is initially
 `newcuttrust + bonus` and is updated using `trust -> λ * trust + used`
@@ -11,7 +11,7 @@ It has a bonus equal to `mycutbonus` if the cut was generated using a trial
 given by the problem using this cut.
 We say that the cut was used if its dual value is nonzero.
 """
-type DecayCutPruningAlgo <: AbstractCutPruningAlgo
+struct DecayCutPruningAlgo <: AbstractCutPruningAlgo
     maxncuts::Int
     λ::Float64
     newcuttrust::Float64
@@ -21,7 +21,7 @@ type DecayCutPruningAlgo <: AbstractCutPruningAlgo
     end
 end
 
-type DecayCutPruner{N, T} <: AbstractCutPruner{N, T}
+mutable struct DecayCutPruner{N, T} <: AbstractCutPruner{N, T}
     # used to generate cuts
     isfun::Bool
     islb::Bool
