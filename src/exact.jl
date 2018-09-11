@@ -59,7 +59,7 @@ function isdominated(A, b, islb, isfun, k, solver, lb, ub, epsilon)
     h = zeros(ncuts - 1)
     H = zeros(ncuts - 1, nx + 1)
     c = zeros(nx + 1)
-    c[1] = (islb)? -1 : 1
+    c[1] = (islb) ? -1 : 1
 
     λk = @view A[k, :]
 
@@ -68,12 +68,12 @@ function isdominated(A, b, islb, isfun, k, solver, lb, ub, epsilon)
         if ix != k
             ic += 1
             δb = b[k] - b[ix]
-            @inbounds h[ic] = ((isfun&islb) || (~isfun&~islb))? δb : -δb
-            @inbounds H[ic, 1] = (islb)? 1 : -1
+            @inbounds h[ic] = ((isfun&islb) || (~isfun&~islb)) ? δb : -δb
+            @inbounds H[ic, 1] = (islb) ? 1 : -1
 
             for jx in 1:nx
                 dl = A[ix, jx] - λk[jx]
-                @inbounds H[ic, jx+1] = (islb)? dl : -dl
+                @inbounds H[ic, jx+1] = (islb) ? dl : -dl
             end
         end
     end
@@ -86,7 +86,7 @@ function isdominated(A, b, islb, isfun, k, solver, lb, ub, epsilon)
     res = linprog(c, H, -Inf, h, lbx, ubx, solver)
     if res.status == :Optimal
         res = res.objval
-        return (islb)? -res < epsilon : res > -epsilon
+        return (islb) ? -res < epsilon : res > -epsilon
     else
         return false
     end

@@ -35,7 +35,7 @@ mutable struct AvgCutPruner{N, T} <: AbstractCutPruner{N, T}
     # number of times where the cuts have been used
     nused::Vector{Int}
     mycut::Vector{Bool}
-    trust::Nullable{Vector{Float64}}
+    trust::Union{Vector{Float64}, Nothing}
     ids::Vector{Int} # small id means old
     id::Int # current id
 
@@ -49,13 +49,13 @@ mutable struct AvgCutPruner{N, T} <: AbstractCutPruner{N, T}
     TOL_EPS::Float64
 
 
-    function (::Type{AvgCutPruner{N, T}}){N, T}(sense::Symbol, maxncuts::Int, newcuttrust=3/4, mycutbonus=1/4, lazy_minus::Bool=false, tol=1e-6, excheck::Bool=false)
+    function (::Type{AvgCutPruner{N, T}})(sense::Symbol, maxncuts::Int, newcuttrust=3/4, mycutbonus=1/4, lazy_minus::Bool=false, tol=1e-6, excheck::Bool=false) where {N, T}
         isfun, islb = gettype(sense)
         new{N, T}(isfun, islb, lazy_minus, spzeros(T, 0, N), T[], maxncuts, Int[], Int[], Bool[], nothing, Int[], 0, newcuttrust, mycutbonus, excheck, tol)
     end
 end
 
-(::Type{CutPruner{N, T}}){N, T}(algo::AvgCutPruningAlgo, sense::Symbol, lazy_minus::Bool=false) = AvgCutPruner{N, T}(sense, algo.maxncuts, algo.newcuttrust, algo.mycutbonus, lazy_minus)
+(::Type{CutPruner{N, T}})(algo::AvgCutPruningAlgo, sense::Symbol, lazy_minus::Bool=false) where {N, T} = AvgCutPruner{N, T}(sense, algo.maxncuts, algo.newcuttrust, algo.mycutbonus, lazy_minus)
 
 # COMPARISON
 """Update cuts relevantness after a solver's call returning dual vector `σρ`."""

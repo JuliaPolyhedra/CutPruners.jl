@@ -1,4 +1,5 @@
-function normalizedcut{T}(A::AbstractMatrix{T}, b::AbstractVector{T}, k::Int, isfun::Bool, tol::Float64)
+function normalizedcut(A::AbstractMatrix{T}, b::AbstractVector{T}, k::Int, 
+                        isfun::Bool, tol::Float64) where {T}
     a = @view A[k, :]
     β = b[k]
     na = norm(a, 2)
@@ -29,9 +30,10 @@ Return index of redundant cuts in `Anew`.
     lines in a single Polyhedra
 
 """
-function checkredundancy{T}(A::AbstractMatrix{T}, b::AbstractVector{T},
+function checkredundancy(A::AbstractMatrix{T}, b::AbstractVector{T},
                             Anew::AbstractMatrix{T}, bnew::AbstractVector{T},
-                            isfun::Bool, islb::Bool, tol::Float64, ident::Bool=false)
+                            isfun::Bool, islb::Bool, tol::Float64, 
+                            ident::Bool=false) where {T}
     # index of redundants cuts
     redundants = Int[]
     # number of new lines
@@ -56,8 +58,8 @@ end
 
 """Check if `λ` is a line of matrix `A`. `λ` might not have the same `eltype`
 as `A` and `b` as it might have been scaled by `normalizecut`."""
-function isinside{T}(A::AbstractMatrix{T}, b::AbstractVector{T},
-                     λ::AbstractVector, isfun::Bool, tol::Float64)
+function isinside(A::AbstractMatrix{T}, b::AbstractVector{T},
+                     λ::AbstractVector, isfun::Bool, tol::Float64) where {T}
     nlines = size(A, 1)
 
     check = false

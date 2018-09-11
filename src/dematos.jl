@@ -49,13 +49,13 @@ mutable struct DeMatosCutPruner{N, T} <: AbstractCutPruner{N, T}
     TOL_EPS::Float64
 
 
-    function (::Type{DeMatosCutPruner{N, T}}){N, T}(sense::Symbol, maxncuts::Int, lazy_minus::Bool=false, tol=1e-6, excheck::Bool=false)
+    function (::Type{DeMatosCutPruner{N, T}})(sense::Symbol, maxncuts::Int, lazy_minus::Bool=false, tol=1e-6, excheck::Bool=false) where {N, T}
         isfun, islb = gettype(sense)
         new{N, T}(isfun, islb, lazy_minus, spzeros(T, 0, N), T[], maxncuts, Tuple{Int, T}[], Int[], 0, [], 0, zeros(T, 0, N), excheck, tol)
     end
 end
 
-(::Type{CutPruner{N, T}}){N, T}(algo::DeMatosPruningAlgo, sense::Symbol, lazy_minus::Bool=false) = DeMatosCutPruner{N, T}(sense, algo.maxncuts, lazy_minus)
+(::Type{CutPruner{N, T}})(algo::DeMatosPruningAlgo, sense::Symbol, lazy_minus::Bool=false) where {N, T} = DeMatosCutPruner{N, T}(sense, algo.maxncuts, lazy_minus)
 
 getnreplaced(man::DeMatosCutPruner, R, ncur, nnew, mycut) = nnew, length(R)
 
@@ -129,8 +129,8 @@ Find active cut at point `xf`.
 * `bestcut::Int`
     Index of supporting cut at point `xf`
 """
-function optimalcut{T}(man::DeMatosCutPruner,
-                       xf::Vector{T})
+function optimalcut(man::DeMatosCutPruner,
+                       xf::Vector{T}) where {T}
     bestcost = -Inf::Float64
     bestcut = -1
     dimstates = length(xf)
@@ -200,7 +200,7 @@ Get value of cut with index `indc` at point `x`.
     otherwise, it is the distance between `x` and the cut.
     As a rule of thumb, the higher the `cutvalue` is, the less it is redundant.
 """
-function cutvalue{T}(man::DeMatosCutPruner, indc::Int, x::Vector{T})
+function cutvalue(man::DeMatosCutPruner, indc::Int, x::Vector{T}) where {T}
     β = man.b[indc]
     a = @view man.A[indc, :]
     ax = dot(a, x)
@@ -226,7 +226,7 @@ function updatetrust!(man)
     end
 end
 
-function replacecuts!{N, T}(man::DeMatosCutPruner{N, T}, K::AbstractVector{Int}, A, b, mycut::AbstractVector{Bool})
+function replacecuts!(man::DeMatosCutPruner{N, T}, K::AbstractVector{Int}, A, b, mycut::AbstractVector{Bool}) where {N, T}
     @assert length(man.territories) == ncuts(man)
     # FIXME If K is 1:ncuts, then checkconsistency will be true and trust will not be recomputed by gettrust
     _replacecuts!(man, K, A, b)
@@ -249,7 +249,7 @@ end
 
 
 """Push new cut in CutPruner `man`."""
-function appendcuts!{N, T}(man::DeMatosCutPruner{N, T}, A, b, mycut::AbstractVector{Bool})
+function appendcuts!(man::DeMatosCutPruner{N, T}, A, b, mycut::AbstractVector{Bool}) where {N, T}
     @assert length(man.territories) == ncuts(man)
     oldncuts = ncuts(man)
     _appendcuts!(man, A, b)
