@@ -57,7 +57,7 @@ getsense(pruner::AbstractCutPruner) = getsense(isfun(pruner), islb(pruner))
 isfun(pruner::AbstractCutPruner) = pruner.isfun
 islb(pruner::AbstractCutPruner) = pruner.islb
 
-immutable CutPruner{N, T} end
+struct CutPruner{N, T} end
 
 """Return whether the CutPruner `man` has any cut."""
 function Base.isempty(man::AbstractCutPruner)
@@ -141,10 +141,10 @@ end
 
 # Add cuts Ax >= b
 # If mycut then the cut has been added because of one of my trials
-function addcuts!{N, T}(man::AbstractCutPruner{N, T},
+function addcuts!(man::AbstractCutPruner{N, T},
                      A::AbstractMatrix{T},
                      b::AbstractVector{T},
-                     mycut::AbstractVector{Bool})
+                     mycut::AbstractVector{Bool}) where {N, T}
     # get current number of cuts:
     ncur = ncuts(man)
     ncutinitial = size(A, 1)
