@@ -252,7 +252,7 @@ function addcuts!(man::AbstractCutPruner{N, T},
             Ar = @view A[replaced,:]
             br = @view b[replaced]
             mycutr = @view mycut[replaced]
-            status[pushed] = (VERSION < v"0.7-" ? ncur + (1:length(pushed)): ncur .+ (1:length(pushed)))
+            status[pushed] = (VERSION < v"0.7-" ? ncur + (1:length(pushed)) : ncur .+ (1:length(pushed)))
             status[pushed] = ncur .+ (1:length(pushed))
             appendcuts!(man, (@view A[pushed,:]), (@view b[pushed]), (@view mycut[pushed]))
         end
