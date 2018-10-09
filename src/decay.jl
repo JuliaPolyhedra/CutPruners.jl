@@ -59,8 +59,8 @@ end
 
 function addusage!(man::DecayCutPruner, σρ)
     if ncuts(man) > 0
-        man.trust *= man.λ
-        man.trust[σρ .> 1e-6] += 1
+        man.trust .*= man.λ
+        man.trust[σρ .> 1e-6] .+= 1
     end
 end
 

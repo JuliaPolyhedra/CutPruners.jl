@@ -1,5 +1,5 @@
 using CutPruners
-using Base.Test
+using Compat, Compat.Test
 
 include("redund.jl")
 include("start.jl")

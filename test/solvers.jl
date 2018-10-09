@@ -13,7 +13,7 @@ end
 grb = try_import(:Gurobi)
 cpx = try_import(:CPLEX)
 xpr = try_import(:Xpress)
-mos = try_import(:Mosek)
+mos = false && try_import(:Mosek)
 cbc = try_import(:Cbc)
 if cbc; import Clp; end
 import GLPKMathProgInterface

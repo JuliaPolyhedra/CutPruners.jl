@@ -3,10 +3,11 @@
 # A package to manage polyhedral convex functions
 ################################################################################
 
-__precompile__()
+VERSION < v"0.7.0-beta2.199" && __precompile__()
 
 module CutPruners
 
+using Compat, Compat.LinearAlgebra, Compat.SparseArrays
 using MathProgBase
 
 # Redudancy checking
