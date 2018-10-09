@@ -263,7 +263,7 @@ function appendcuts!(man::DeMatosCutPruner{N, T}, A, b, mycut::AbstractVector{Bo
         end
     else
         man.territories = vcat(man.territories, newterritories)
-        for k in oldncuts+(1:nnew)
+        for k in oldncuts .+ (1:nnew)
             updateterritory!(man, k)
         end
     end

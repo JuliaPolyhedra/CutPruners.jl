@@ -61,9 +61,9 @@ end
 """Update cuts relevantness after a solver's call returning dual vector `σρ`."""
 function addusage!(man::AvgCutPruner, σρ)
     if ncuts(man) > 0
-        man.nwith += 1
+        man.nwith .+= 1
         # TODO: dry 1e-6 in CutPruner?
-        man.nused[σρ .> 1e-6] += 1
+        man.nused[σρ .> 1e-6] .+= 1
         man.trust = nothing # need to be recomputed
     end
 end
@@ -75,16 +75,16 @@ function initialtrust(man::AvgCutPruner, mycut)
     gettrustof(man, 0, 0, mycut)
 end
 function hastrust(man::AvgCutPruner)
-    !isnull(man.trust)
+    man.trust !== nothing
 end
 function gettrust(man::AvgCutPruner)
     if !hastrust(man)
         trust = man.nused ./ man.nwith
-        trust[man.nwith .== 0] = man.newcuttrust
-        trust[man.mycut] += man.mycutbonus
+        trust[man.nwith .== 0] .= man.newcuttrust
+        trust[man.mycut] .+= man.mycutbonus
         man.trust = trust
     end
-    get(man.trust)
+    man.trust
 end
 
 # CHANGE
@@ -97,12 +97,12 @@ function keeponlycuts!(man::AvgCutPruner, K::AbstractVector{Int})
 end
 
 function replacecuts!(man::AvgCutPruner, K::AbstractVector{Int}, A, b, mycut::AbstractVector{Bool})
-    man.nwith[K] = 0
-    man.nused[K] = 0
-    man.mycut[K] = mycut
+    man.nwith[K] .= 0
+    man.nused[K] .= 0
+    man.mycut[K] .= mycut
     _replacecuts!(man, K, A, b)
     if hastrust(man)
-        get(man.trust)[K] = initialtrusts(man, mycut)
+        man.trust[K] .= initialtrusts(man, mycut)
     end
 end
 
@@ -113,6 +113,6 @@ function appendcuts!(man::AvgCutPruner, A, b, mycut::AbstractVector{Bool})
     append!(man.mycut, mycut)
     _appendcuts!(man, A, b)
     if hastrust(man)
-        append!(get(man.trust), initialtrusts(man, mycut))
+        append!(man.trust, initialtrusts(man, mycut))
     end
 end

@@ -142,9 +142,9 @@ end
 # Add cuts Ax >= b
 # If mycut then the cut has been added because of one of my trials
 function addcuts!(man::AbstractCutPruner{N, T},
-                     A::AbstractMatrix{T},
-                     b::AbstractVector{T},
-                     mycut::AbstractVector{Bool}) where {N, T}
+                  A::AbstractMatrix{T},
+                  b::AbstractVector{T},
+                  mycut::AbstractVector{Bool}) where {N, T}
     # get current number of cuts:
     ncur = ncuts(man)
     ncutinitial = size(A, 1)
@@ -190,7 +190,7 @@ function addcuts!(man::AbstractCutPruner{N, T},
 
     if man.maxncuts == -1 || ncur + nnew <= man.maxncuts
         # If enough room, just append cuts
-        status = ncur + (1:nnew)
+        status = (VERSION < v"0.7-" ? ncur + (1:nnew) : ncur .+ (1:nnew))
         appendcuts!(man, A, b, mycut)
     else
         # Otherwise, we need need to remove some cuts
@@ -240,7 +240,7 @@ function addcuts!(man::AbstractCutPruner{N, T},
                     end
                 end
 
-                takeit = find(takeit)
+                takeit = findall(takeit)
             else
                 takeit = collect(1:nnew)
             end
@@ -252,12 +252,13 @@ function addcuts!(man::AbstractCutPruner{N, T},
             Ar = @view A[replaced,:]
             br = @view b[replaced]
             mycutr = @view mycut[replaced]
-            status[pushed] = ncur + (1:length(pushed))
+            status[pushed] = (VERSION < v"0.7-" ? ncur + (1:length(pushed)) : ncur .+ (1:length(pushed)))
+            status[pushed] = ncur .+ (1:length(pushed))
             appendcuts!(man, (@view A[pushed,:]), (@view b[pushed]), (@view mycut[pushed]))
         end
         if nreplaced > 0
-            man.A[R, :] = Ar
-            man.b[R] = br
+            man.A[R, :] .= Ar
+            man.b[R] .= br
             replacecuts!(man, R, Ar, br, mycutr)
         end
     end
@@ -265,9 +266,9 @@ function addcuts!(man::AbstractCutPruner{N, T},
     if isempty(redundants)
         fullstatus = status
     else
-        fullstatus = Array{Int}(nnew + length(redundants))
-        fullstatus[tokeep] = status
-        fullstatus[redundants] = 0
+        fullstatus = Array{Int}(undef, nnew + length(redundants))
+        fullstatus[tokeep] .= status
+        fullstatus[redundants] .= 0
     end
     fullstatus
 end

@@ -16,7 +16,7 @@ end
     for algo in [AvgCutPruningAlgo(3), DecayCutPruningAlgo(3), DeMatosPruningAlgo(3)]
         pruner = CutPruner{2, Int}(algo, :≤)
         @test isempty(pruner)
-        addcuts!(pruner, [1 2; 3 4; 5 6], [7, 8, 9], BitArray(3))
+        addcuts!(pruner, [1 2; 3 4; 5 6], [7, 8, 9], BitArray(undef, 3))
         @test !isempty(pruner)
         keeponlycuts!(pruner, [3, 1])
         @test pruner.A == [5 6; 1 2]
