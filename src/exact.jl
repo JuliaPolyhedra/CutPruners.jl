@@ -84,7 +84,14 @@ function isdominated(A, b, islb, isfun, k, optimizer_constructor, lb, ub, epsilo
 
     # solve the LP with JuMP
     model = Model(optimizer_constructor)
-    z = @variable(model, [1:nx+1], lower_bound=lbx, upper_bound=ubx)
+    z = @variable(model, [1:nx+1])
+    if lb isa Vector
+        set_lower_bound.(z, lb)
+    end
+    if ub isa Vector
+        set_upper_bound.(z, ub)
+    end
+
     @constraint(model, H * z .≤ h)
     @objective(model, Min, c ⋅ z)
     optimize!(model)

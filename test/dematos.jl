@@ -1,5 +1,4 @@
 using CutPruners
-using Compat, Compat.Test
 
 @testset "DeMatos cut pruning" begin
     algo = DeMatosPruningAlgo(3)
