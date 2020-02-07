@@ -1,5 +1,5 @@
 using CutPruners
-using Compat
+using Test
 using JuMP, GLPK
 
 include("redund.jl")

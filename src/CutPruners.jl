@@ -6,7 +6,7 @@
 
 module CutPruners
 
-using Compat, Compat.LinearAlgebra, Compat.SparseArrays
+using LinearAlgebra, SparseArrays
 using JuMP
 
 # Redudancy checking

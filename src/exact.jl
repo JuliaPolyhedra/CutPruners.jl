@@ -97,5 +97,10 @@ function isdominated(A, b, islb, isfun, k, optimizer_constructor, lb, ub, epsilo
     optimize!(model)
 
     res = objective_value(model)
-    return (islb) ? -res < epsilon : res > -epsilon
+
+    if termination_status(model) == JuMP.MOI.OPTIMAL
+        return (islb) ? -res < epsilon : res > -epsilon
+    else
+        return false
+    end
 end
