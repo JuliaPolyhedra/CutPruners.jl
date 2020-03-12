@@ -96,11 +96,16 @@ function isdominated(A, b, islb, isfun, k, optimizer_constructor, lb, ub, epsilo
     @objective(model, Min, c ⋅ z)
     optimize!(model)
 
-    res = objective_value(model)
+    status = termination_status(model)
 
-    if termination_status(model) == JuMP.MOI.OPTIMAL
+    if status == MOI.INFEASIBLE
+        return true
+    elseif status == MOI.DUAL_INFEASIBLE
+        return false
+    elseif status == MOI.OPTIMAL
+        res = objective_value(model)
         return (islb) ? -res < epsilon : res > -epsilon
     else
-        return false
+        error("Solver returned status $status: $(raw_status(model)).")
     end
 end
