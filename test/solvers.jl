@@ -13,7 +13,7 @@ end
 grb = try_import(:Gurobi)
 cpx = try_import(:CPLEX)
 xpr = try_import(:Xpress)
-mos = false && try_import(:Mosek)
+mos = false && try_import(:MosekTools)
 cbc = try_import(:Cbc)
 if cbc; import Clp; end
 
@@ -24,12 +24,12 @@ ipt = try_import(:Ipopt)
 eco = try_import(:ECOS)
 
 # Create LP solver list
-lp_solvers = Any[]
-grb && push!(lp_solvers, Gurobi.GurobiSolver(OutputFlag=0))
-cpx && push!(lp_solvers, CPLEX.CplexSolver(CPX_PARAM_SCRIND=0))
-xpr && push!(lp_solvers, Xpress.XpressSolver(OUTPUTLOG=0))
-mos && push!(lp_solvers, Mosek.MosekSolver(LOG=0))
-cbc && push!(lp_solvers, Clp.ClpSolver())
-glp && push!(lp_solvers, with_optimizer(GLPK.Optimizer))
-ipt && push!(lp_solvers, Ipopt.IpoptSolver(print_level=0))
-eco && push!(lp_solvers, ECOS.ECOSSolver(verbose=false))
+lp_solvers = Module[]
+grb && push!(lp_solvers, Gurobi)
+cpx && push!(lp_solvers, CPLEX)
+xpr && push!(lp_solvers, Xpress)
+mos && push!(lp_solvers, Mosek)
+cbc && push!(lp_solvers, Clp)
+glp && push!(lp_solvers, GLPK)
+ipt && push!(lp_solvers, Ipopt)
+eco && push!(lp_solvers, ECOS)
