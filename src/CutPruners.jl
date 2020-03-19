@@ -3,12 +3,11 @@
 # A package to manage polyhedral convex functions
 ################################################################################
 
-VERSION < v"0.7.0-beta2.199" && __precompile__()
 
 module CutPruners
 
-using Compat, Compat.LinearAlgebra, Compat.SparseArrays
-using MathProgBase
+using LinearAlgebra, SparseArrays
+using JuMP
 
 # Redudancy checking
 include("redund.jl")

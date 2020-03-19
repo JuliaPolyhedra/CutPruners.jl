@@ -1,5 +1,4 @@
 using CutPruners
-using Compat, Compat.Test
 
 include("solvers.jl")
 

@@ -2,7 +2,7 @@ export exactpruning!
 
 # Exact pruning
 """
-    exactpruning!(man::AbstractCutPruner, solver::MathProgBase.AbstractMathProgSolver;
+    exactpruning!(man::AbstractCutPruner, optimizer_constructor;
                   ub=Inf, lb=-Inf, epsilon=1e-5)
 
 
@@ -13,8 +13,8 @@ We use a LP solver to determine whether a cut is dominated or not.
 # Arguments
 * `man::AbstractCutPruner`
     Cut pruner where to remove cuts
-* `solver`
-    Solver used to solve LP
+* `optimizer_constructor`
+    Optimizer used to solve LP
 * `ub::Union{Float64, Vector{Float64}}`
     State x upper bound
 * `lb::Union{Float64, Vector{Float64}}`
@@ -22,19 +22,19 @@ We use a LP solver to determine whether a cut is dominated or not.
 * `epsilon::Float64`
     Pruning's tolerance
 """
-function exactpruning!(man::AbstractCutPruner, solver::MathProgBase.AbstractMathProgSolver; ub=Inf, lb=-Inf, epsilon=1e-5)
-    K = getdominated(man.A, man.b, man.islb, man.isfun, solver, lb, ub, epsilon)
+function exactpruning!(man::AbstractCutPruner, optimizer_constructor; ub = Inf, lb = -Inf, epsilon = 1e-5)
+    K = getdominated(man.A, man.b, man.islb, man.isfun, optimizer_constructor, lb, ub, epsilon)
     removecuts!(man, K)
 end
 
 """Return dominated cuts."""
-function getdominated(A, b, islb, isfun, solver, lb, ub, epsilon)
+function getdominated(A, b, islb, isfun, optimizer_constructor, lb, ub, epsilon)
     red = Int[]
     if size(A, 1) == 1
         return red
     end
     for i in 1:size(A, 1)
-        if isdominated(A, b, islb, isfun, i, solver, lb, ub, epsilon)
+        if isdominated(A, b, islb, isfun, i, optimizer_constructor, lb, ub, epsilon)
             push!(red, i)
         end
     end
@@ -42,8 +42,8 @@ function getdominated(A, b, islb, isfun, solver, lb, ub, epsilon)
 end
 
 """State whether a cut is dominated with a tolerance epsilon."""
-function isdominated(A, b, islb, isfun, k, solver, lb, ub, epsilon)
-    # we use MathProgBase to solve the test
+function isdominated(A, b, islb, isfun, k, optimizer_constructor, lb, ub, epsilon)
+    # we use JuMP to solve the test
     # For instance, if islb & isfun, the LP becomes:
     # min - y
     #     x ∈ R^n, y ∈ R
@@ -68,26 +68,44 @@ function isdominated(A, b, islb, isfun, k, solver, lb, ub, epsilon)
         if ix != k
             ic += 1
             δb = b[k] - b[ix]
-            @inbounds h[ic] = ((isfun&islb) || (~isfun&~islb)) ? δb : -δb
+            @inbounds h[ic] = ((isfun & islb) || (~isfun & ~islb)) ? δb : -δb
             @inbounds H[ic, 1] = (islb) ? 1 : -1
 
             for jx in 1:nx
                 dl = A[ix, jx] - λk[jx]
-                @inbounds H[ic, jx+1] = (islb) ? dl : -dl
+                @inbounds H[ic, jx + 1] = (islb) ? dl : -dl
             end
         end
     end
 
     # update lower and upper bound if Vector
     lbx = isa(lb, Vector) ? vcat(-Inf, lb) : lb
-    ubx = isa(ub, Vector) ? vcat( Inf, ub) : ub
+    ubx = isa(ub, Vector) ? vcat(Inf, ub) : ub
 
-    # solve the LP with MathProgBase
-    res = linprog(c, H, -Inf, h, lbx, ubx, solver)
-    if res.status == :Optimal
-        res = res.objval
+    # solve the LP with JuMP
+    model = Model(optimizer_constructor)
+    z = @variable(model, [1:nx+1])
+    if lb isa Vector
+        set_lower_bound.(z, lb)
+    end
+    if ub isa Vector
+        set_upper_bound.(z, ub)
+    end
+
+    @constraint(model, H * z .≤ h)
+    @objective(model, Min, c ⋅ z)
+    optimize!(model)
+
+    status = termination_status(model)
+
+    if status == MOI.INFEASIBLE
+        return true
+    elseif status == MOI.DUAL_INFEASIBLE
+        return false
+    elseif status == MOI.OPTIMAL
+        res = objective_value(model)
         return (islb) ? -res < epsilon : res > -epsilon
     else
-        return false
+        error("Solver returned status $status: $(raw_status(model)).")
     end
 end

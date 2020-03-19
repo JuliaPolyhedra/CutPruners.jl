@@ -16,7 +16,9 @@ xpr = try_import(:Xpress)
 mos = false && try_import(:Mosek)
 cbc = try_import(:Cbc)
 if cbc; import Clp; end
-import GLPKMathProgInterface
+
+import JuMP
+import GLPK
 glp = true
 ipt = try_import(:Ipopt)
 eco = try_import(:ECOS)
@@ -28,6 +30,6 @@ cpx && push!(lp_solvers, CPLEX.CplexSolver(CPX_PARAM_SCRIND=0))
 xpr && push!(lp_solvers, Xpress.XpressSolver(OUTPUTLOG=0))
 mos && push!(lp_solvers, Mosek.MosekSolver(LOG=0))
 cbc && push!(lp_solvers, Clp.ClpSolver())
-glp && push!(lp_solvers, GLPKMathProgInterface.GLPKSolverLP())
+glp && push!(lp_solvers, with_optimizer(GLPK.Optimizer))
 ipt && push!(lp_solvers, Ipopt.IpoptSolver(print_level=0))
 eco && push!(lp_solvers, ECOS.ECOSSolver(verbose=false))
