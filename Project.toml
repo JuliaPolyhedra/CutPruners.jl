@@ -1,7 +1,7 @@
 name = "CutPruners"
 uuid = "65d46eb8-70e9-5a30-bf48-2afa3a021b8f"
 repo = "https://github.com/cynddl/CutPruners.jl"
-version = "0.2.0"
+version = "0.3.0"
 
 [deps]
 JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
@@ -9,7 +9,7 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
-JuMP = "0.21"
+JuMP = "1"
 julia = "1"
 
 [extras]
