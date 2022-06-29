@@ -5,7 +5,9 @@ end
 
 using Documenter, CutPruners
 
-makedocs()
+makedocs(
+    sitename = "CutPruners",
+)
 
 deploydocs(
     deps = Deps.pip("mkdocs", "python-markdown-math"),
